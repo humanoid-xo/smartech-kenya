@@ -1,16 +1,4 @@
-import nodemailer from 'nodemailer';
 import twilio from 'twilio';
-
-// Email transporter
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_SERVER_HOST,
-  port: parseInt(process.env.EMAIL_SERVER_PORT || '587'),
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_SERVER_USER,
-    pass: process.env.EMAIL_SERVER_PASSWORD,
-  },
-});
 
 // Twilio client
 const twilioClient = process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN
@@ -22,18 +10,10 @@ export async function sendEmail(
   subject: string,
   html: string
 ): Promise<void> {
-  try {
-    await transporter.sendMail({
-      from: process.env.EMAIL_FROM,
-      to,
-      subject,
-      html,
-    });
-    console.log(`Email sent to ${to}`);
-  } catch (error) {
-    console.error('Email sending failed:', error);
-    throw error;
-  }
+  console.log(`📧 Email would be sent to ${to}: ${subject}`);
+  console.log('(Email functionality disabled - can be added back later)');
+  // Email functionality disabled for now
+  return Promise.resolve();
 }
 
 export async function sendSMS(to: string, body: string): Promise<void> {
