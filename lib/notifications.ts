@@ -1,6 +1,5 @@
 import twilio from 'twilio';
 
-// Twilio client
 const twilioClient = process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN
   ? twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
   : null;
@@ -10,15 +9,15 @@ export async function sendEmail(
   subject: string,
   html: string
 ): Promise<void> {
-  console.log(`📧 Email would be sent to ${to}: ${subject}`);
-  console.log('(Email functionality disabled - can be added back later)');
-  // Email functionality disabled for now
+  console.log(`📧 Email notification: ${to} - ${subject}`);
+  console.log('(Email temporarily disabled - SMS notifications active)');
   return Promise.resolve();
 }
 
 export async function sendSMS(to: string, body: string): Promise<void> {
   if (!twilioClient) {
-    console.warn('Twilio not configured, skipping SMS');
+    console.log(`📱 SMS would be sent to ${to}: ${body}`);
+    console.log('(Twilio not configured)');
     return;
   }
 
@@ -28,10 +27,9 @@ export async function sendSMS(to: string, body: string): Promise<void> {
       to,
       body,
     });
-    console.log(`SMS sent to ${to}`);
+    console.log(`✅ SMS sent to ${to}`);
   } catch (error) {
     console.error('SMS sending failed:', error);
-    throw error;
   }
 }
 
@@ -52,16 +50,15 @@ export async function sendOrderConfirmation(
     <h3>Items:</h3>
     <ul>
       ${orderDetails.items.map(item => `
-        <li>${item.name} - Quantity: ${item.quantity} - KES ${item.price.toLocaleString()}</li>
+        <li>${item.name} - Qty: ${item.quantity} - KES ${item.price.toLocaleString()}</li>
       `).join('')}
     </ul>
-    <p>We'll notify you when your order is ready for delivery.</p>
   `;
 
-  await sendEmail(email, 'Order Confirmation - Smartech Kenya', emailHtml);
+  await sendEmail(email, 'Order Confirmation', emailHtml);
 
   if (phone) {
-    const smsBody = `Smartech Kenya: Your order #${orderDetails.orderId} has been confirmed. Total: KES ${orderDetails.total.toLocaleString()}. Thank you!`;
+    const smsBody = `Smartech Kenya: Order #${orderDetails.orderId} confirmed! Total: KES ${orderDetails.total.toLocaleString()}. Thank you!`;
     await sendSMS(phone, smsBody);
   }
 }
