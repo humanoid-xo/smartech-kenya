@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 
@@ -18,7 +18,7 @@ export default function Footer() {
               <span className="text-xl font-display font-bold">Smartech Kenya</span>
             </div>
             <p className="text-neutral-400 text-sm mb-4">
-              Kenya's premier marketplace for quality tech and kitchen appliances.
+              Premium home & kitchen appliances. Visit us at Gaberone Plaza, 4th Floor A13, Nairobi.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-neutral-400 hover:text-primary-500 transition-colors">
@@ -44,8 +44,8 @@ export default function Footer() {
             <h4 className="font-bold text-lg mb-4">Shop</h4>
             <ul className="space-y-2">
               <li>
-                <Link href="/products?category=tech" className="text-neutral-400 hover:text-white transition-colors">
-                  Tech Appliances
+                <Link href="/products?category=home" className="text-neutral-400 hover:text-white transition-colors">
+                  Home Appliances
                 </Link>
               </li>
               <li>
@@ -129,10 +129,10 @@ export default function Footer() {
         <div className="pt-8 border-t border-neutral-800">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-neutral-400 text-sm">
-              © {currentYear} Smartech Kenya. All rights reserved.
+              Â© {currentYear} Smartech Kenya. All rights reserved.
             </p>
             <div className="flex items-center gap-4 text-sm text-neutral-400">
-              <span>🇰🇪 Made in Kenya, for Kenya</span>
+              <span>ðŸ‡°ðŸ‡ª Made in Kenya, for Kenya</span>
             </div>
           </div>
         </div>
@@ -140,3 +140,5 @@ export default function Footer() {
     </footer>
   );
 }
+
+
