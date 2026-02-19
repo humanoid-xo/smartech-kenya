@@ -8,7 +8,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   try {
     const product = await prisma.product.findUnique({ where: { id: params.id }, include: { seller: { select: { id: true, name: true, email: true } }, reviews: { include: { user: { select: { name: true } } } } } });
     if (!product) return NextResponse.json({ error: 'Product not found' }, { status: 404 });
-    const avgRating = product.reviews.length > 0 ? product.reviews.reduce((sum: number, r) => sum + r.rating, 0) / product.reviews.length : 0;
+    const avgRating = product.reviews.length > 0 ? product.reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / product.reviews.length : 0;
     return NextResponse.json({ ...product, avgRating, reviewCount: product.reviews.length });
   } catch (error) { return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 }); }
 }
