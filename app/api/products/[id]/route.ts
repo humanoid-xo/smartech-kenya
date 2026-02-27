@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db/prisma';
 import { updateProductSchema } from '@/lib/validation/schemas';
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
