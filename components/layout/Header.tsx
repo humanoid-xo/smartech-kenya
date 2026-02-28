@@ -1,138 +1,163 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import { SearchBar } from '@/components/features/search/SearchBar';
 
 export function Header() {
   const { data: session } = useSession();
   const cartItems = useSelector((state: RootState) => state.cart.items);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled,    setScrolled]    = useState(false);
+  const [mobileOpen,  setMobileOpen]  = useState(false);
 
-  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const cartCount = cartItems.reduce((s, i) => s + i.quantity, 0);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const navLinks = [
+    { label: 'Smartphones', href: '/products?category=SMARTPHONES' },
+    { label: 'Laptops',     href: '/products?category=LAPTOPS'     },
+    { label: 'Appliances',  href: '/products?category=HOME_APPLIANCES' },
+    { label: 'All Products',href: '/products'                      },
+  ];
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-      {/* Top Bar */}
-      <div className="bg-kenya-black text-white py-2 px-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between text-sm">
-          <div className="flex items-center gap-4">
-            <span>🇰🇪 Kenya's #1 Tech Marketplace</span>
-          </div>
-          <div className="hidden md:flex items-center gap-4">
-            <span>Free Delivery on Orders Over KES 10,000</span>
-            <span>•</span>
-            <span>Track Your Order</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Header */}
-      <div className="max-w-7xl mx-auto px-4 py-4">
-        <div className="flex items-center justify-between gap-8">
+    <>
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? 'bg-white/90 backdrop-blur-xl border-b border-gray-100/80 shadow-sm'
+            : 'bg-transparent'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-6">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-kenya-green rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">SK</span>
+          <Link href="/" className="flex items-center gap-2.5 shrink-0">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm transition-colors ${scrolled ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
+              S
             </div>
-            <div className="hidden sm:block">
-              <div className="font-display font-bold text-xl">Smartech Kenya</div>
-              <div className="text-xs text-gray-500">Premium Quality</div>
-            </div>
+            <span className={`font-display text-lg hidden sm:block transition-colors ${scrolled ? 'text-gray-900' : 'text-white'}`}>
+              Smartech
+            </span>
           </Link>
 
-          {/* Search Bar */}
-          <div className="flex-1 max-w-2xl hidden md:block">
-            <SearchBar />
-          </div>
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-7">
+            {navLinks.map(({ label, href }) => (
+              <Link
+                key={label}
+                href={href}
+                className={`text-sm transition-colors ${scrolled ? 'text-gray-600 hover:text-gray-900' : 'text-white/70 hover:text-white'}`}
+              >
+                {label}
+              </Link>
+            ))}
+          </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1">
+            {/* Cart */}
+            <Link
+              href="/cart"
+              className={`relative p-2.5 rounded-full transition-colors ${scrolled ? 'hover:bg-gray-100 text-gray-700' : 'hover:bg-white/10 text-white'}`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+              {cartCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-[18px] h-[18px] bg-kenya-green text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {cartCount > 9 ? '9+' : cartCount}
+                </span>
+              )}
+            </Link>
+
+            {/* User */}
             {session ? (
-              <>
-                <Link 
-                  href="/cart" 
-                  className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  {cartCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-kenya-red text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                      {cartCount}
-                    </span>
-                  )}
-                </Link>
-                <div className="relative group">
-                  <button className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                    <div className="w-8 h-8 bg-kenya-green text-white rounded-full flex items-center justify-center">
-                      {session.user?.name?.[0]?.toUpperCase() || 'U'}
-                    </div>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                    <div className="p-2">
-                      <Link href="/orders" className="block px-4 py-2 hover:bg-gray-100 rounded">
-                        My Orders
-                      </Link>
-                      {(session.user as any)?.isSeller && (
-                        <Link href="/seller" className="block px-4 py-2 hover:bg-gray-100 rounded">
-                          Seller Dashboard
-                        </Link>
-                      )}
-                      <button
-                        onClick={() => signOut()}
-                        className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded text-kenya-red"
-                      >
-                        Sign Out
-                      </button>
-                    </div>
-                  </div>
+              <button
+                onClick={() => signOut()}
+                className={`hidden sm:flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full text-sm transition-colors ${scrolled ? 'hover:bg-gray-100 text-gray-700' : 'hover:bg-white/10 text-white/80'}`}
+              >
+                <div className="w-6 h-6 rounded-full bg-kenya-green flex items-center justify-center text-white text-xs font-bold">
+                  {session.user?.name?.[0]?.toUpperCase() ?? 'U'}
                 </div>
-              </>
+                <span className="text-sm">Sign out</span>
+              </button>
             ) : (
-              <>
-                <Link href="/login" className="btn btn-secondary">
-                  Sign In
-                </Link>
-                <Link href="/register" className="btn btn-primary hidden sm:block">
-                  Register
-                </Link>
-              </>
+              <Link
+                href="/login"
+                className={`hidden sm:inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                  scrolled
+                    ? 'bg-gray-900 text-white hover:bg-gray-700'
+                    : 'bg-white text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                Sign in
+              </Link>
             )}
+
+            {/* Mobile menu toggle */}
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className={`md:hidden p-2.5 rounded-full transition-colors ${scrolled ? 'hover:bg-gray-100 text-gray-700' : 'hover:bg-white/10 text-white'}`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {mobileOpen
+                  ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                  : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
+                }
+              </svg>
+            </button>
           </div>
         </div>
+      </header>
 
-        {/* Mobile Search */}
-        <div className="mt-4 md:hidden">
-          <SearchBar />
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 md:hidden" onClick={() => setMobileOpen(false)}>
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+          <nav
+            className="absolute top-16 left-0 right-0 bg-white border-b border-gray-100 p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-col gap-1">
+              {navLinks.map(({ label, href }) => (
+                <Link
+                  key={label}
+                  href={href}
+                  onClick={() => setMobileOpen(false)}
+                  className="px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors text-sm font-medium"
+                >
+                  {label}
+                </Link>
+              ))}
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                {session ? (
+                  <button
+                    onClick={() => { signOut(); setMobileOpen(false); }}
+                    className="w-full px-4 py-3 rounded-xl text-left text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    Sign out
+                  </button>
+                ) : (
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileOpen(false)}
+                    className="block w-full px-4 py-3 bg-gray-900 text-white text-sm font-medium rounded-xl text-center"
+                  >
+                    Sign in
+                  </Link>
+                )}
+              </div>
+            </div>
+          </nav>
         </div>
-      </div>
-
-      {/* Navigation */}
-      <nav className="border-t border-gray-200">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center gap-8 py-3">
-            <Link href="/products?category=TECH" className="text-gray-700 hover:text-kenya-green font-medium">
-              Technology
-            </Link>
-            <Link href="/products?category=KITCHEN" className="text-gray-700 hover:text-kenya-green font-medium">
-              Kitchen
-            </Link>
-            <Link href="/products" className="text-gray-700 hover:text-kenya-green font-medium">
-              All Products
-            </Link>
-            <Link href="/deals" className="text-kenya-red hover:text-red-700 font-medium">
-              Deals 🔥
-            </Link>
-          </div>
-        </div>
-      </nav>
-    </header>
+      )}
+    </>
   );
 }

@@ -9,27 +9,28 @@ module.exports = {
     extend: {
       colors: {
         kenya: {
-          black: '#000000',
-          red: '#BA0C2F',
+          black: '#0a0a0a',
+          red:   '#BA0C2F',
           green: '#006B3F',
-          white: '#FFFFFF',
-        },
-        primary: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8',
-          500: '#0ea5e9',
-          600: '#0284c7',
-          700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
         },
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
-        display: ['var(--font-playfair)', 'Georgia', 'serif'],
+        display: ['var(--font-display)', 'Georgia', 'serif'],
+        sans:    ['var(--font-sans)', 'system-ui', 'sans-serif'],
+      },
+      keyframes: {
+        fadeUp: {
+          '0%':   { opacity: '0', transform: 'translateY(16px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        shimmer: {
+          '0%':   { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition:  '200% 0' },
+        },
+      },
+      animation: {
+        'fade-up': 'fadeUp 0.5s ease-out forwards',
+        shimmer:   'shimmer 1.5s infinite',
       },
     },
   },

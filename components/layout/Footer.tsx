@@ -1,73 +1,77 @@
 import Link from 'next/link';
 
+const COLUMNS = {
+  'Shop': [
+    { label: 'Smartphones & Tablets', href: '/products?category=SMARTPHONES'    },
+    { label: 'Laptops & Computers',   href: '/products?category=LAPTOPS'        },
+    { label: 'Home Appliances',       href: '/products?category=HOME_APPLIANCES'},
+    { label: 'Kitchen Appliances',    href: '/products?category=KITCHEN'        },
+    { label: 'Audio & Television',    href: '/products?category=AUDIO_TV'       },
+    { label: 'Smart Home',            href: '/products?category=SMART_HOME'     },
+  ],
+  'Company': [
+    { label: 'About Us',  href: '/about'   },
+    { label: 'Blog',      href: '/blog'    },
+    { label: 'Careers',   href: '/careers' },
+  ],
+  'Support': [
+    { label: 'Help Center',  href: '/help'    },
+    { label: 'Track Order',  href: '/orders'  },
+    { label: 'Returns',      href: '/returns' },
+    { label: 'Contact Us',   href: '/contact' },
+  ],
+};
+
 export function Footer() {
   return (
-    <footer className="bg-kenya-black text-white mt-auto">
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid md:grid-cols-4 gap-8 mb-8">
+    <footer className="bg-[#0a0a0a] border-t border-white/5">
+      <div className="max-w-7xl mx-auto px-6 pt-16 pb-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-16">
           {/* Brand */}
-          <div>
-            <h3 className="font-display font-bold text-xl mb-4">Smartech Kenya</h3>
-            <p className="text-gray-400 mb-4">
-              Kenya's premier marketplace for premium technology and kitchen appliances.
+          <div className="col-span-2 md:col-span-1">
+            <div className="flex items-center gap-2.5 mb-5">
+              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                <span className="text-gray-900 font-bold text-sm">S</span>
+              </div>
+              <span className="font-display text-lg text-white">Smartech</span>
+            </div>
+            <p className="text-white/40 text-sm leading-relaxed">
+              Kenya&apos;s premium marketplace for electronics and home appliances.
             </p>
-            <div className="flex gap-4">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                </svg>
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-                </svg>
-              </a>
+            <div className="mt-5 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
+              <span className="w-1.5 h-1.5 rounded-full bg-kenya-green animate-pulse" />
+              <span className="text-[11px] text-white/40">M-Pesa accepted</span>
             </div>
           </div>
 
-          {/* Shop */}
-          <div>
-            <h4 className="font-bold mb-4">Shop</h4>
-            <ul className="space-y-2">
-              <li><Link href="/products?category=TECH" className="text-gray-400 hover:text-white">Technology</Link></li>
-              <li><Link href="/products?category=KITCHEN" className="text-gray-400 hover:text-white">Kitchen</Link></li>
-              <li><Link href="/deals" className="text-gray-400 hover:text-white">Deals</Link></li>
-              <li><Link href="/products" className="text-gray-400 hover:text-white">All Products</Link></li>
-            </ul>
-          </div>
-
-          {/* Support */}
-          <div>
-            <h4 className="font-bold mb-4">Support</h4>
-            <ul className="space-y-2">
-              <li><Link href="/contact" className="text-gray-400 hover:text-white">Contact Us</Link></li>
-              <li><Link href="/shipping" className="text-gray-400 hover:text-white">Shipping Info</Link></li>
-              <li><Link href="/returns" className="text-gray-400 hover:text-white">Returns</Link></li>
-              <li><Link href="/faq" className="text-gray-400 hover:text-white">FAQ</Link></li>
-            </ul>
-          </div>
-
-          {/* Company */}
-          <div>
-            <h4 className="font-bold mb-4">Company</h4>
-            <ul className="space-y-2">
-              <li><Link href="/about" className="text-gray-400 hover:text-white">About Us</Link></li>
-              <li><Link href="/seller" className="text-gray-400 hover:text-white">Become a Seller</Link></li>
-              <li><Link href="/privacy" className="text-gray-400 hover:text-white">Privacy Policy</Link></li>
-              <li><Link href="/terms" className="text-gray-400 hover:text-white">Terms of Service</Link></li>
-            </ul>
-          </div>
+          {/* Link columns */}
+          {Object.entries(COLUMNS).map(([col, links]) => (
+            <div key={col}>
+              <div className="text-white/60 text-[11px] font-bold uppercase tracking-widest mb-5">{col}</div>
+              <ul className="space-y-3">
+                {links.map(({ label, href }) => (
+                  <li key={label}>
+                    <Link href={href} className="text-white/35 text-sm hover:text-white/70 transition-colors">
+                      {label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
-        {/* Bottom Bar */}
-        <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-gray-400 text-sm">
-            © 2026 Smartech Kenya. All rights reserved.
-          </p>
-          <div className="flex items-center gap-4 text-sm text-gray-400">
-            <span>🇰🇪 Made in Kenya</span>
-            <span>•</span>
-            <span>Powered by M-Pesa</span>
+        {/* Bottom bar */}
+        <div className="pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <span className="text-white/20 text-xs">
+            &copy; {new Date().getFullYear()} Smartech Kenya Ltd. All rights reserved.
+          </span>
+          <div className="flex gap-6">
+            {['Privacy', 'Terms', 'Cookies'].map((item) => (
+              <Link key={item} href={`/${item.toLowerCase()}`} className="text-white/20 text-xs hover:text-white/50 transition-colors">
+                {item}
+              </Link>
+            ))}
           </div>
         </div>
       </div>

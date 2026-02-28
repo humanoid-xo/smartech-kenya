@@ -1,43 +1,48 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { FeaturedProducts } from '@/components/features/products/FeaturedProducts';
-import { Categories } from '@/components/features/home/Categories';
-import { HeroSection } from '@/components/features/home/HeroSection';
-import { Newsletter } from '@/components/features/home/Newsletter';
+import { Categories }       from '@/components/features/home/Categories';
+import { HeroSection }      from '@/components/features/home/HeroSection';
+import { Newsletter }        from '@/components/features/home/Newsletter';
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen">
+    <div>
       <HeroSection />
 
-      <section className="py-16 px-4 max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-display font-bold mb-4">
-            Shop by Category
-          </h2>
-          <p className="text-gray-600 text-lg">
-            Discover premium products in our curated collections
-          </p>
+      {/* Shop by Category */}
+      <section className="py-24 px-6 bg-[#f5f5f7]">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-12">
+            <p className="section-label mb-3">Browse by category</p>
+            <h2 className="section-title">
+              Everything you need,
+              <br />
+              <span className="text-gray-400">all in one place.</span>
+            </h2>
+          </div>
+          <Categories />
         </div>
-        <Categories />
       </section>
 
-      <section className="py-16 px-4 bg-white">
+      {/* Featured Products */}
+      <section className="py-24 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-12">
+          <div className="flex items-end justify-between mb-12">
             <div>
-              <h2 className="text-4xl font-display font-bold mb-4">
-                Featured Products
+              <p className="section-label mb-3">Hand-picked for you</p>
+              <h2 className="section-title">
+                Featured <span className="text-gray-400">Products</span>
               </h2>
-              <p className="text-gray-600 text-lg">
-                Handpicked items you&apos;ll love
-              </p>
             </div>
             <Link
               href="/products"
-              className="inline-flex items-center px-6 py-3 bg-kenya-green text-white font-semibold rounded-lg hover:bg-opacity-90 transition-colors"
+              className="hidden sm:inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors font-medium"
             >
-              View All Products
+              View all
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
             </Link>
           </div>
           <Suspense fallback={<ProductsLoading />}>
@@ -46,41 +51,50 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 px-4 bg-kenya-black text-white">
+      {/* Why Smartech — bento grid */}
+      <section className="py-24 px-6 bg-[#f5f5f7]">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-display font-bold mb-4">
-              Why Choose Smartech Kenya
+          <div className="mb-12">
+            <p className="section-label mb-3">Why Smartech</p>
+            <h2 className="section-title">
+              The smarter way
+              <br />
+              <span className="text-gray-400">to shop in Kenya.</span>
             </h2>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-kenya-green rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+          <div className="grid md:grid-cols-3 gap-4">
+            {[
+              {
+                symbol: '✓',
+                title:  'Quality Guaranteed',
+                desc:   'Every product is verified for authenticity. No counterfeits. No compromise.',
+                bg:     'bg-[#0a0a0a]',
+                fg:     'text-white',
+                sub:    'text-white/50',
+              },
+              {
+                symbol: 'M',
+                title:  'M-Pesa Payments',
+                desc:   "Pay securely with Kenya's most trusted mobile money platform — no card needed.",
+                bg:     'bg-kenya-green',
+                fg:     'text-white',
+                sub:    'text-white/60',
+              },
+              {
+                symbol: '⚡',
+                title:  'Fast Delivery',
+                desc:   'Same-day delivery in Nairobi. Next-day across Kenya. Track every step.',
+                bg:     'bg-white',
+                fg:     'text-gray-900',
+                sub:    'text-gray-500',
+              },
+            ].map(({ symbol, title, desc, bg, fg, sub }) => (
+              <div key={title} className={`${bg} rounded-2xl p-8 border border-transparent`}>
+                <div className={`font-display text-4xl font-light ${fg} mb-6 leading-none`}>{symbol}</div>
+                <h3 className={`text-xl font-semibold ${fg} mb-2`}>{title}</h3>
+                <p className={`text-sm leading-relaxed ${sub}`}>{desc}</p>
               </div>
-              <h3 className="text-xl font-bold mb-2">Quality Guaranteed</h3>
-              <p className="text-gray-300">All products verified for authenticity and quality</p>
-            </div>
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-kenya-green rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold mb-2">M-Pesa Payments</h3>
-              <p className="text-gray-300">Secure payments with Kenya&apos;s trusted mobile money</p>
-            </div>
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-kenya-green rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold mb-2">Fast Delivery</h3>
-              <p className="text-gray-300">Quick delivery across Kenya</p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -92,12 +106,16 @@ export default function HomePage() {
 
 function ProductsLoading() {
   return (
-    <div className="grid md:grid-cols-4 gap-6">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       {[...Array(8)].map((_, i) => (
-        <div key={i} className="bg-white rounded-xl shadow-sm p-4">
-          <div className="animate-pulse bg-gray-200 h-48 rounded-lg mb-4" />
-          <div className="animate-pulse bg-gray-200 h-4 rounded mb-2" />
-          <div className="animate-pulse bg-gray-200 h-4 rounded w-2/3" />
+        <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="aspect-square animate-shimmer-bg" />
+          <div className="p-4 space-y-2.5">
+            <div className="h-3 animate-shimmer-bg rounded-full w-1/3" />
+            <div className="h-4 animate-shimmer-bg rounded-full" />
+            <div className="h-4 animate-shimmer-bg rounded-full w-3/4" />
+            <div className="h-5 animate-shimmer-bg rounded-full w-1/2 mt-1" />
+          </div>
         </div>
       ))}
     </div>
