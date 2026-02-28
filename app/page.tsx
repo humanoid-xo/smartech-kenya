@@ -10,7 +10,7 @@ export default function HomePage() {
     <div className="min-h-screen">
       {/* Hero Section */}
       <HeroSection />
-      
+
       {/* Categories */}
       <section className="py-16 px-4 max-w-7xl mx-auto">
         <div className="text-center mb-12">
@@ -23,7 +23,7 @@ export default function HomePage() {
         </div>
         <Categories />
       </section>
-      
+
       {/* Featured Products */}
       <section className="py-16 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
@@ -33,22 +33,24 @@ export default function HomePage() {
                 Featured Products
               </h2>
               <p className="text-gray-600 text-lg">
-                Handpicked items you'll love
+                Handpicked items you&apos;ll love
               </p>
             </div>
-            <Link 
-              href="/products" 
-              className="btn btn-primary"
+            {/* ✅ btn/btn-primary replaced with real Tailwind — those classes don't exist in Tailwind by default */}
+            <Link
+              href="/products"
+              className="inline-flex items-center px-6 py-3 bg-kenya-green text-white font-semibold rounded-lg hover:bg-opacity-90 transition-colors"
             >
               View All Products
             </Link>
           </div>
+          {/* ✅ Suspense is valid here — FeaturedProducts is an async Server Component and streams through this boundary */}
           <Suspense fallback={<ProductsLoading />}>
             <FeaturedProducts />
           </Suspense>
         </div>
       </section>
-      
+
       {/* Why Choose Us */}
       <section className="py-16 px-4 bg-kenya-black text-white">
         <div className="max-w-7xl mx-auto">
@@ -65,9 +67,7 @@ export default function HomePage() {
                 </svg>
               </div>
               <h3 className="text-xl font-bold mb-2">Quality Guaranteed</h3>
-              <p className="text-gray-300">
-                All products verified for authenticity and quality
-              </p>
+              <p className="text-gray-300">All products verified for authenticity and quality</p>
             </div>
             <div className="text-center p-6">
               <div className="w-16 h-16 bg-kenya-green rounded-full flex items-center justify-center mx-auto mb-4">
@@ -76,9 +76,7 @@ export default function HomePage() {
                 </svg>
               </div>
               <h3 className="text-xl font-bold mb-2">M-Pesa Payments</h3>
-              <p className="text-gray-300">
-                Secure payments with Kenya's trusted mobile money
-              </p>
+              <p className="text-gray-300">Secure payments with Kenya&apos;s trusted mobile money</p>
             </div>
             <div className="text-center p-6">
               <div className="w-16 h-16 bg-kenya-green rounded-full flex items-center justify-center mx-auto mb-4">
@@ -87,28 +85,28 @@ export default function HomePage() {
                 </svg>
               </div>
               <h3 className="text-xl font-bold mb-2">Fast Delivery</h3>
-              <p className="text-gray-300">
-                Quick delivery across Kenya
-              </p>
+              <p className="text-gray-300">Quick delivery across Kenya</p>
             </div>
           </div>
         </div>
       </section>
-      
+
       {/* Newsletter */}
       <Newsletter />
     </div>
   );
 }
 
+// ✅ animate-shimmer replaced with animate-pulse — shimmer is not a built-in Tailwind class
+// ✅ "card" replaced with real Tailwind utilities — card is not a built-in Tailwind class
 function ProductsLoading() {
   return (
     <div className="grid md:grid-cols-4 gap-6">
       {[...Array(8)].map((_, i) => (
-        <div key={i} className="card p-4">
-          <div className="animate-shimmer h-48 rounded-lg mb-4" />
-          <div className="animate-shimmer h-4 rounded mb-2" />
-          <div className="animate-shimmer h-4 rounded w-2/3" />
+        <div key={i} className="bg-white rounded-xl shadow-sm p-4">
+          <div className="animate-pulse bg-gray-200 h-48 rounded-lg mb-4" />
+          <div className="animate-pulse bg-gray-200 h-4 rounded mb-2" />
+          <div className="animate-pulse bg-gray-200 h-4 rounded w-2/3" />
         </div>
       ))}
     </div>
