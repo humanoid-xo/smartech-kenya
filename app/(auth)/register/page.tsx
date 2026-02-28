@@ -1,180 +1,203 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useForm } from 'react-hook-form';
-import toast from 'react-hot-toast';
+import { useState }   from 'react';
+import { useForm }     from 'react-hook-form';
+import { useRouter }   from 'next/navigation';
+import { signIn }      from 'next-auth/react';
+import Link            from 'next/link';
 
-interface RegisterForm {
-  name: string;
-  email: string;
+type RegisterForm = {
+  name:     string;
+  email:    string;
+  phone?:   string;
   password: string;
-  confirmPassword: string;
-  phone: string;
-  isSeller: boolean;
-}
+  confirm:  string;
+};
 
 export default function RegisterPage() {
-  const router = useRouter();
+  const router             = useRouter();
+  const [error, setError]  = useState('');
   const [loading, setLoading] = useState(false);
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<RegisterForm>();
-  
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<RegisterForm>();
+
   const password = watch('password');
 
   const onSubmit = async (data: RegisterForm) => {
     setLoading(true);
-    
+    setError('');
+
     try {
-      const response = await fetch('/api/register', {
-        method: 'POST',
+      const res = await fetch('/api/register', {
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body:    JSON.stringify({
+          name:     data.name,
+          email:    data.email,
+          phone:    data.phone || undefined,
+          password: data.password,
+        }),
       });
 
-      const result = await response.json();
+      const json = await res.json();
 
-      if (response.ok) {
-        toast.success('Registration successful! Please sign in.');
-        router.push('/login');
-      } else {
-        toast.error(result.error || 'Registration failed');
+      if (!res.ok) {
+        setError(json.error ?? 'Registration failed. Please try again.');
+        setLoading(false);
+        return;
       }
-    } catch (error) {
-      toast.error('An error occurred. Please try again.');
-    } finally {
+
+      // Auto sign-in after successful registration
+      const result = await signIn('credentials', {
+        email:    data.email,
+        password: data.password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        // Account created but auto-login failed — redirect to login
+        router.push('/login?registered=true');
+      } else {
+        router.push('/');
+        router.refresh();
+      }
+    } catch {
+      setError('Something went wrong. Please try again.');
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gray-50">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center px-4 py-16">
+      <div className="w-full max-w-sm">
+
+        {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-display font-bold mb-2">Join Smartech Kenya</h1>
-          <p className="text-gray-600">Create your account and start shopping</p>
+          <div className="inline-flex w-12 h-12 bg-gray-900 rounded-2xl items-center justify-center mb-4">
+            <span className="text-white font-bold text-lg">S</span>
+          </div>
+          <h1 className="font-display text-2xl text-gray-900">Create account</h1>
+          <p className="text-gray-500 text-sm mt-1">Join Smartech Kenya today</p>
         </div>
 
-        <div className="card p-8">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+
+            {error && (
+              <div className="bg-red-50 border border-red-100 text-red-600 text-sm px-4 py-3 rounded-xl">
+                {error}
+              </div>
+            )}
+
+            {/* Full name */}
             <div>
-              <label className="block text-sm font-medium mb-2">Full Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Full name</label>
               <input
                 type="text"
-                className="input"
-                placeholder="John Doe"
-                {...register('name', { 
-                  required: 'Name is required',
-                  minLength: { value: 2, message: 'Name must be at least 2 characters' }
+                placeholder="Jane Doe"
+                autoComplete="name"
+                {...register('name', {
+                  required:  'Name is required',
+                  minLength: { value: 2, message: 'Name must be at least 2 characters' },
                 })}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-100 transition-all"
               />
-              {errors.name && (
-                <p className="text-kenya-red text-sm mt-1">{errors.name.message}</p>
-              )}
+              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
             </div>
 
+            {/* Email */}
             <div>
-              <label className="block text-sm font-medium mb-2">Email Address</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email address</label>
               <input
                 type="email"
-                className="input"
                 placeholder="you@example.com"
-                {...register('email', { 
+                autoComplete="email"
+                {...register('email', {
                   required: 'Email is required',
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: 'Invalid email address'
-                  }
+                  pattern:  { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Enter a valid email' },
                 })}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-100 transition-all"
               />
-              {errors.email && (
-                <p className="text-kenya-red text-sm mt-1">{errors.email.message}</p>
-              )}
+              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
             </div>
 
+            {/* Phone (optional) */}
             <div>
-              <label className="block text-sm font-medium mb-2">Phone Number</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Phone <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
               <input
                 type="tel"
-                className="input"
-                placeholder="+254712345678"
-                {...register('phone', {
-                  pattern: {
-                    value: /^\+?[0-9]{10,15}$/,
-                    message: 'Invalid phone number'
-                  }
-                })}
+                placeholder="+254 7XX XXX XXX"
+                autoComplete="tel"
+                {...register('phone')}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-100 transition-all"
               />
-              {errors.phone && (
-                <p className="text-kenya-red text-sm mt-1">{errors.phone.message}</p>
-              )}
             </div>
 
+            {/* Password */}
             <div>
-              <label className="block text-sm font-medium mb-2">Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
               <input
                 type="password"
-                className="input"
-                placeholder="••••••••"
-                {...register('password', { 
-                  required: 'Password is required',
-                  minLength: { value: 8, message: 'Password must be at least 8 characters' },
+                placeholder="Min. 8 characters"
+                autoComplete="new-password"
+                {...register('password', {
+                  required:  'Password is required',
+                  minLength: { value: 8, message: 'Must be at least 8 characters' },
                   pattern: {
-                    value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-                    message: 'Password must contain uppercase, lowercase, and number'
-                  }
+                    value:   /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])/,
+                    message: 'Must include upper, lower, and a number',
+                  },
                 })}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-100 transition-all"
               />
-              {errors.password && (
-                <p className="text-kenya-red text-sm mt-1">{errors.password.message}</p>
-              )}
+              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
             </div>
 
+            {/* Confirm password */}
             <div>
-              <label className="block text-sm font-medium mb-2">Confirm Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Confirm password</label>
               <input
                 type="password"
-                className="input"
                 placeholder="••••••••"
-                {...register('confirmPassword', { 
+                autoComplete="new-password"
+                {...register('confirm', {
                   required: 'Please confirm your password',
-                  validate: value => value === password || 'Passwords do not match'
+                  validate:  (v) => v === password || 'Passwords do not match',
                 })}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-100 transition-all"
               />
-              {errors.confirmPassword && (
-                <p className="text-kenya-red text-sm mt-1">{errors.confirmPassword.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="flex items-center">
-                <input 
-                  type="checkbox" 
-                  className="rounded text-kenya-green"
-                  {...register('isSeller')}
-                />
-                <span className="ml-2 text-sm">I want to sell products on Smartech Kenya</span>
-              </label>
+              {errors.confirm && <p className="text-red-500 text-xs mt-1">{errors.confirm.message}</p>}
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full btn btn-primary"
+              className="w-full py-3 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-700 transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed mt-2"
             >
-              {loading ? 'Creating Account...' : 'Create Account'}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                  Creating account...
+                </span>
+              ) : 'Create account'}
             </button>
           </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Already have an account?{' '}
-              <Link href="/login" className="text-kenya-green hover:text-green-700 font-medium">
-                Sign in
-              </Link>
-            </p>
-          </div>
         </div>
+
+        <p className="text-center text-sm text-gray-500 mt-6">
+          Already have an account?{' '}
+          <Link href="/login" className="text-gray-900 font-semibold hover:underline">Sign in</Link>
+        </p>
       </div>
     </div>
   );
