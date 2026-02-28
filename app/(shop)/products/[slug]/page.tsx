@@ -1,20 +1,47 @@
-import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
+import { prisma } from '@/lib/db/prisma';
 import { ProductDetail } from '@/components/features/products/ProductDetail';
 
 async function getProduct(slug: string) {
-  // Extract ID from slug (format: product-name-1234567890)
   const id = slug.split('-').pop();
-  
-  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/products/${id}`, {
-    cache: 'no-store',
-  });
+  if (!id) return null;
 
-  if (!res.ok) return null;
-  
-  const data = await res.json();
-  return data.data;
+  try {
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: {
+        seller: {
+          select: { id: true, name: true, email: true },
+        },
+        reviews: {
+          include: {
+            user: {
+              select: { name: true, image: true },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    });
+
+    if (!product) return null;
+
+    return {
+      ...product,
+      avgRating:
+        product.reviews.length > 0
+          ? product.reviews.reduce((sum, r) => sum + r.rating, 0) /
+            product.reviews.length
+          : 0,
+      reviewCount: product.reviews.length,
+    };
+  } catch (error) {
+    console.error('Failed to fetch product:', error);
+    return null;
+  }
 }
+
+export const revalidate = 60;
 
 export default async function ProductDetailPage({
   params,
@@ -30,9 +57,7 @@ export default async function ProductDetailPage({
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4">
-        <Suspense fallback={<div>Loading...</div>}>
-          <ProductDetail product={product} />
-        </Suspense>
+        <ProductDetail product={product} />
       </div>
     </div>
   );

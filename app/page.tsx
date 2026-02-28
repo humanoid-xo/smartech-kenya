@@ -8,10 +8,8 @@ import { Newsletter } from '@/components/features/home/Newsletter';
 export default function HomePage() {
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
       <HeroSection />
 
-      {/* Categories */}
       <section className="py-16 px-4 max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-display font-bold mb-4">
@@ -24,7 +22,6 @@ export default function HomePage() {
         <Categories />
       </section>
 
-      {/* Featured Products */}
       <section className="py-16 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-12">
@@ -36,7 +33,6 @@ export default function HomePage() {
                 Handpicked items you&apos;ll love
               </p>
             </div>
-            {/* ✅ btn/btn-primary replaced with real Tailwind — those classes don't exist in Tailwind by default */}
             <Link
               href="/products"
               className="inline-flex items-center px-6 py-3 bg-kenya-green text-white font-semibold rounded-lg hover:bg-opacity-90 transition-colors"
@@ -44,14 +40,12 @@ export default function HomePage() {
               View All Products
             </Link>
           </div>
-          {/* ✅ Suspense is valid here — FeaturedProducts is an async Server Component and streams through this boundary */}
           <Suspense fallback={<ProductsLoading />}>
             <FeaturedProducts />
           </Suspense>
         </div>
       </section>
 
-      {/* Why Choose Us */}
       <section className="py-16 px-4 bg-kenya-black text-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
@@ -91,14 +85,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Newsletter */}
       <Newsletter />
     </div>
   );
 }
 
-// ✅ animate-shimmer replaced with animate-pulse — shimmer is not a built-in Tailwind class
-// ✅ "card" replaced with real Tailwind utilities — card is not a built-in Tailwind class
 function ProductsLoading() {
   return (
     <div className="grid md:grid-cols-4 gap-6">

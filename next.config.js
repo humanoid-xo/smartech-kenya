@@ -19,11 +19,8 @@ const nextConfig = {
     ],
   },
   reactStrictMode: true,
-  // swcMinify removed — deprecated in Next.js 14, it's the default now
   poweredByHeader: false,
   compress: true,
-  // experimental.optimizeCss removed — requires critters at runtime,
-  // which is a devDependency and crashes Vercel builds
 };
 
 module.exports = nextConfig;
