@@ -1,4 +1,4 @@
-﻿import { notFound }       from 'next/navigation';
+import { notFound }       from 'next/navigation';
 import { prisma }           from '@/lib/db/prisma';
 import { ProductDetail }    from '@/components/features/products/ProductDetail';
 
