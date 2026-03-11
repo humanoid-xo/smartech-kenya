@@ -1,12 +1,11 @@
-export const dynamic = 'force-dynamic';
-
 import Image     from 'next/image';
 import Link      from 'next/link';
-import { Suspense } from 'react';
 import { prisma }   from '@/lib/prisma';
 import { ProductCard } from '@/components/features/products/ProductCard';
 import { CATEGORIES, POPULAR_BRANDS } from '@/constants/categories';
 import type { Metadata } from 'next';
+
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Smartech Kenya — Premium Tech & Home Appliances',
@@ -275,7 +274,7 @@ export default async function HomePage() {
               {
                 n: '02',
                 title: 'M-Pesa Payments',
-                body:  'Instant, secure checkout with Kenya's most trusted mobile money platform. Safe every time.',
+                body:  "Instant, secure checkout with Kenya's most trusted mobile money platform. Safe every time.",
                 icon:  'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',
               },
               {

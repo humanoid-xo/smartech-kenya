@@ -73,7 +73,11 @@
     @apply btn px-7 py-3.5 rounded-full bg-forest-600 text-cream hover:bg-forest-500;
   }
   .btn-outline-cream {
-    @apply btn px-7 py-3.5 rounded-full border border-cream/20 text-cream hover:bg-cream/8;
+    @apply btn px-7 py-3.5 rounded-full border text-cream;
+    border-color: rgba(245, 240, 232, 0.20);
+  }
+  .btn-outline-cream:hover {
+    background-color: rgba(245, 240, 232, 0.08);
   }
 
   /* ── Cards ─────────────────────────────────────*/
