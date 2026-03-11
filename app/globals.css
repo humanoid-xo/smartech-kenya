@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Fonts loaded via CSS for resilience */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
+
+:root {
+  --font-cormorant: 'Cormorant Garamond', Georgia, serif;
+  --font-dm-sans:   'DM Sans', system-ui, sans-serif;
+}
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; margin: 0; }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: var(--font-dm-sans), system-ui, sans-serif;
+    background: #F5F0E8;
+    color: #0C0C0C;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background: #1A6B3A;
+    color: #F5F0E8;
+  }
+
+  ::-webkit-scrollbar       { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track  { background: #EDE7D9; }
+  ::-webkit-scrollbar-thumb  { background: #B8A99A; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #8A7B6E; }
+
+  *:focus-visible {
+    outline: 2px solid #1A6B3A;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer components {
+
+  /* ── Typography ─────────────────────────────── */
+  .h1 { font-family: var(--font-cormorant); font-size: clamp(3.5rem,8vw,7rem);  line-height: 1.0;  letter-spacing: -0.03em; font-weight: 400; }
+  .h2 { font-family: var(--font-cormorant); font-size: clamp(2.5rem,5vw,4.5rem); line-height: 1.05; letter-spacing: -0.025em; font-weight: 400; }
+  .h3 { font-family: var(--font-cormorant); font-size: clamp(1.8rem,3vw,2.8rem); line-height: 1.1; letter-spacing: -0.02em; font-weight: 400; }
+  .h4 { font-family: var(--font-cormorant); font-size: clamp(1.4rem,2.5vw,2rem); line-height: 1.15; letter-spacing: -0.015em; font-weight: 500; }
+
+  .overline {
+    font-family: var(--font-dm-sans);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  /* ── Buttons ─────────────────────────────────── */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-sans font-medium text-sm transition-all duration-200 active:scale-[0.97] select-none;
+  }
+  .btn-dark {
+    @apply btn px-7 py-3.5 rounded-full bg-ink text-cream hover:bg-ink-soft;
+  }
+  .btn-cream {
+    @apply btn px-7 py-3.5 rounded-full bg-cream text-ink hover:bg-cream-warm border border-cream-warm;
+  }
+  .btn-forest {
+    @apply btn px-7 py-3.5 rounded-full bg-forest-600 text-cream hover:bg-forest-500;
+  }
+  .btn-outline-cream {
+    @apply btn px-7 py-3.5 rounded-full border border-cream/20 text-cream hover:bg-cream/8;
+  }
+
+  /* ── Cards ─────────────────────────────────────*/
+  .card {
+    @apply bg-white rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-[0_8px_40px_rgba(0,0,0,0.1)] hover:-translate-y-px;
+  }
+
+  /* ── Skeleton ────────────────────────────────── */
+  .skeleton {
+    background: linear-gradient(90deg, #EDE7D9 25%, #E5DDD0 50%, #EDE7D9 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+    border-radius: 8px;
+  }
+}
+
+/* ── Line under section headers ─── */
+.section-rule::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 2px;
+  background: #1A6B3A;
+  margin-top: 12px;
+}
+
+/* ── Product image transition ─── */
+.prod-img { transition: transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+.group:hover .prod-img { transform: scale(1.06); }
