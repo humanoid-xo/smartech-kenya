@@ -13,21 +13,27 @@ export default function Error({
   useEffect(() => { console.error(error) }, [error])
 
   return (
-    <div className="min-h-screen bg-navy-50 flex items-center justify-center px-4">
-      <div className="text-center max-w-md bg-white rounded-2xl p-10 shadow border border-navy-100">
-        <div className="text-5xl mb-4">⚠️</div>
-        <h2 className="font-heading text-2xl font-bold text-navy-900 mb-2">Something went wrong</h2>
-        <p className="text-navy-500 mb-8 text-sm">
+    <div className="min-h-screen bg-cream pt-[68px] flex items-center justify-center px-6">
+      <div className="text-center max-w-md">
+
+        <div className="font-display text-[7rem] text-cream-warm leading-none mb-2 select-none">!</div>
+
+        <h2 className="font-display text-ink font-light mb-3"
+          style={{ fontSize: 'clamp(1.8rem,4vw,2.8rem)' }}>
+          Something went wrong
+        </h2>
+        <p className="text-ink-faint text-sm mb-8 leading-relaxed">
           An unexpected error occurred. You can try again or return to the homepage.
         </p>
+
         <div className="flex gap-3 justify-center">
           <button
             onClick={reset}
-            className="px-6 py-3 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-colors"
+            className="btn-dark px-7 py-3.5"
           >
             Try Again
           </button>
-          <Link href="/" className="px-6 py-3 bg-white border border-navy-200 text-navy-700 font-bold rounded-xl hover:border-primary-300 transition-colors">
+          <Link href="/" className="btn-cream px-7 py-3.5">
             Go Home
           </Link>
         </div>
