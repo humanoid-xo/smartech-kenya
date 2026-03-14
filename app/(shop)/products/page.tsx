@@ -11,7 +11,7 @@ export default function ProductsPage({ searchParams }: { searchParams: Record<st
       {/* Page header */}
       <div className="bg-cream-warm border-b border-cream-warm/80 py-10 px-6">
         <div className="max-w-[1320px] mx-auto">
-          <p className="text-[10px] font-bold tracking-[0.14em] uppercase text-forest-600 mb-2">Smartech Kenya</p>
+          <p className="text-[10px] font-bold tracking-[0.14em] uppercase text-ink-muted mb-2">Smartech Kenya</p>
           <h1 className="font-display text-ink" style={{ fontSize: 'clamp(2.2rem,4.5vw,3.5rem)', fontWeight: 400 }}>
             All Products
           </h1>

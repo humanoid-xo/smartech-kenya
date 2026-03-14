@@ -23,7 +23,7 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-2 lg:col-span-2">
             <Link href="/" className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-forest-800 border border-cream/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-white/[0.08] border border-cream/10 flex items-center justify-center">
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                   <path d="M3 9C3 5.686 5.686 3 9 3s6 2.686 6 6-2.686 6-6 6-6-2.686-6-6z" stroke="#F5F0E8" strokeWidth="1.5"/>
                   <path d="M6.5 9h5M9 6.5v5" stroke="#F5F0E8" strokeWidth="1.5" strokeLinecap="round"/>
@@ -72,7 +72,7 @@ export function Footer() {
                 { name:'TikTok',    href:'https://tiktok.com/@smartechkenya',   icon:'M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.24 8.24 0 004.84 1.56V6.78a4.85 4.85 0 01-1.07-.09z' },
               ].map(s => (
                 <a key={s.name} href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.name}
-                  className="w-9 h-9 rounded-xl border border-cream/10 flex items-center justify-center text-cream/30 hover:text-cream hover:border-cream/30 hover:bg-forest-800 transition-all">
+                  className="w-9 h-9 rounded-xl border border-cream/10 flex items-center justify-center text-cream/30 hover:text-cream hover:border-cream/30 hover:bg-white/[0.08] transition-all">
                   <svg className="w-[13px] h-[13px]" fill="currentColor" viewBox="0 0 24 24"><path d={s.icon}/></svg>
                 </a>
               ))}

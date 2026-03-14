@@ -1,60 +1,48 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { PrismaAdapter } from '@next-auth/prisma-adapter';
-import { prisma } from '@/lib/db/prisma';
+import { prisma }          from '@/lib/db/prisma';
 import { comparePassword } from '@/lib/auth/password';
-import { loginSchema } from '@/lib/validation/schemas';
+import { loginSchema }     from '@/lib/validation/schemas';
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  // NO adapter — we use JWT sessions, adapter is only for database sessions
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge:   30 * 24 * 60 * 60,
   },
   pages: {
     signIn: '/login',
-    error: '/login',
+    error:  '/login',
   },
   providers: [
     CredentialsProvider({
       name: 'credentials',
       credentials: {
-        email: { label: 'Email', type: 'email' },
+        email:    { label: 'Email',    type: 'email'    },
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('Invalid credentials');
-        }
+        if (!credentials?.email || !credentials?.password) return null;
 
-        // Validate input
         const result = loginSchema.safeParse(credentials);
-        if (!result.success) {
-          throw new Error('Invalid email or password format');
-        }
+        if (!result.success) return null;
 
-        // Find user
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
         });
 
-        if (!user || !user.hashedPassword) {
-          throw new Error('Invalid credentials');
-        }
+        if (!user?.hashedPassword) return null;
 
-        // Verify password
         const isValid = await comparePassword(credentials.password, user.hashedPassword);
-        if (!isValid) {
-          throw new Error('Invalid credentials');
-        }
+        if (!isValid) return null;
 
         return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
+          id:       user.id,
+          email:    user.email,
+          name:     user.name,
+          image:    user.image ?? null,
           isSeller: user.isSeller,
-          isAdmin: user.isAdmin,
+          isAdmin:  user.isAdmin,
         };
       },
     }),
@@ -62,21 +50,20 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
+        token.id       = user.id;
         token.isSeller = (user as any).isSeller;
-        token.isAdmin = (user as any).isAdmin;
+        token.isAdmin  = (user as any).isAdmin;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as any).id = token.id;
+        (session.user as any).id       = token.id;
         (session.user as any).isSeller = token.isSeller;
-        (session.user as any).isAdmin = token.isAdmin;
+        (session.user as any).isAdmin  = token.isAdmin;
       }
       return session;
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === 'development',
 };

@@ -53,7 +53,7 @@ export default function LoginPage() {
               <label className="block text-xs font-semibold text-ink-muted uppercase tracking-wide mb-2">Email</label>
               <input type="email" placeholder="you@example.com"
                 {...register('email', { required: 'Required', pattern: { value: /^\S+@\S+\.\S+$/, message: 'Invalid email' } })}
-                className="w-full px-4 py-3.5 rounded-xl border border-cream-warm bg-cream text-sm text-ink placeholder-cream-muted focus:outline-none focus:border-forest-600 focus:ring-2 focus:ring-forest-600/10 transition-all"
+                className="w-full px-4 py-3.5 rounded-xl border border-cream-warm bg-cream text-sm text-ink placeholder-cream-muted focus:outline-none focus:border-amber-luxe focus:ring-2 focus:ring-amber-luxe/10 transition-all"
               />
               {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
             </div>
@@ -61,11 +61,11 @@ export default function LoginPage() {
             <div>
               <div className="flex justify-between mb-2">
                 <label className="text-xs font-semibold text-ink-muted uppercase tracking-wide">Password</label>
-                <Link href="/forgot-password" className="text-xs text-forest-600 hover:underline">Forgot?</Link>
+                <Link href="/forgot-password" className="text-xs text-amber-luxe hover:underline">Forgot?</Link>
               </div>
               <input type="password" placeholder="••••••••"
                 {...register('password', { required: 'Required' })}
-                className="w-full px-4 py-3.5 rounded-xl border border-cream-warm bg-cream text-sm text-ink placeholder-cream-muted focus:outline-none focus:border-forest-600 focus:ring-2 focus:ring-forest-600/10 transition-all"
+                className="w-full px-4 py-3.5 rounded-xl border border-cream-warm bg-cream text-sm text-ink placeholder-cream-muted focus:outline-none focus:border-amber-luxe focus:ring-2 focus:ring-amber-luxe/10 transition-all"
               />
               {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
             </div>

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma }                     from '@/lib/db/prisma';
+import { prisma }                    from '@/lib/db/prisma';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(
   _req: NextRequest,
@@ -7,7 +9,7 @@ export async function GET(
 ) {
   try {
     const product = await prisma.product.findUnique({
-      where: { id: params.id },
+      where:   { id: params.id },
       include: {
         seller:  { select: { id: true, name: true, email: true } },
         reviews: {
@@ -27,12 +29,10 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      data:    { ...product, avgRating, reviewCount: product.reviews.length },
+      data: { ...product, avgRating, reviewCount: product.reviews.length },
     });
   } catch (err) {
     console.error('GET /api/products/[id] error:', err);
     return NextResponse.json({ success: false, error: 'Failed to fetch product' }, { status: 500 });
   }
 }
-
-

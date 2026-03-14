@@ -81,7 +81,7 @@ export function ProductCard({ product: p }: { product: Product }) {
             aria-label="Add to cart"
             className="absolute bottom-3 right-3 w-9 h-9 rounded-xl bg-ink text-cream flex items-center justify-center
                        opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0
-                       transition-all duration-200 hover:bg-forest-600 shadow-lg z-10"
+                       transition-all duration-200 hover:bg-ink-soft shadow-lg z-10"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>

@@ -40,7 +40,7 @@ export function Header() {
         <span className="hidden sm:inline">🚚 Free delivery within Nairobi</span>
         <span className="text-cream/20 hidden sm:inline">·</span>
         <a href="https://wa.me/254746722417"
-          className="inline-flex items-center gap-1.5 text-forest-400 hover:text-forest-300 transition-colors font-semibold">
+          className="inline-flex items-center gap-1.5 hover:opacity-80 transition-opacity font-semibold" style={{ color: "#C4872C" }}>
           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.557 4.126 1.526 5.855L.055 23.266l5.533-1.448A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.928 0-3.736-.518-5.29-1.42l-.378-.224-3.93 1.028 1.046-3.818-.246-.393A9.965 9.965 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
           </svg>
@@ -129,13 +129,13 @@ export function Header() {
                           <Link
                             key={sub.slug}
                             href={`/products?category=${cat.enum}&subcategory=${sub.slug}`}
-                            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-forest-900/80 transition-colors group/sub"
+                            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-white/[0.07] transition-colors group/sub"
                           >
-                            <span className="w-7 h-7 rounded-lg bg-forest-900 flex items-center justify-center text-sm shrink-0">
+                            <span className="w-7 h-7 rounded-lg bg-white/[0.06] flex items-center justify-center text-sm shrink-0">
                               {sub.emoji}
                             </span>
                             <div className="min-w-0">
-                              <p className="text-cream text-xs font-medium leading-tight group-hover/sub:text-forest-300 transition-colors truncate">
+                              <p className="text-cream text-xs font-medium leading-tight group-hover/sub:text-cream/90 transition-colors truncate">
                                 {sub.name}
                               </p>
                             </div>
@@ -152,7 +152,7 @@ export function Header() {
               href="/products?isFeatured=true"
               className={[
                 'px-3.5 py-2 rounded-xl text-sm font-semibold transition-all',
-                onDark ? 'text-amber-light/80 hover:text-amber-light hover:bg-cream/[0.08]' : 'text-amber-luxe hover:bg-amber-pale',
+                onDark ? 'text-amber-light hover:text-amber-light hover:bg-cream/[0.07]' : 'text-amber-luxe hover:bg-amber-pale',
               ].join(' ')}
             >
               Deals
@@ -170,8 +170,8 @@ export function Header() {
               className={[
                 'hidden xl:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all',
                 onDark
-                  ? 'text-forest-300 hover:bg-cream/[0.08]'
-                  : 'text-forest-600 hover:bg-forest-600/[0.08]',
+                  ? 'text-amber-light/80 hover:bg-cream/[0.08]'
+                  : 'text-amber-luxe hover:bg-amber-pale',
               ].join(' ')}
             >
               <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
@@ -206,7 +206,7 @@ export function Header() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
               </svg>
               {cartCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-[18px] h-[18px] bg-forest-500 text-cream text-[9px] font-bold rounded-full flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 w-[18px] h-[18px] bg-ink-soft text-cream text-[9px] font-bold rounded-full flex items-center justify-center">
                   {cartCount > 9 ? '9+' : cartCount}
                 </span>
               )}
@@ -345,7 +345,7 @@ export function Header() {
             <div className="p-5 space-y-3 border-t border-cream-warm">
               <a
                 href="https://wa.me/254746722417?text=Hi%20Smartech%20Kenya%2C%20I%20want%20to%20order"
-                className="flex items-center justify-center gap-2 w-full py-3.5 bg-forest-600 text-cream rounded-xl text-sm font-semibold"
+                className="flex items-center justify-center gap-2 w-full py-3.5 bg-ink text-cream rounded-xl text-sm font-semibold"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.557 4.126 1.526 5.855L.055 23.266l5.533-1.448A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.928 0-3.736-.518-5.29-1.42l-.378-.224-3.93 1.028 1.046-3.818-.246-.393A9.965 9.965 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
