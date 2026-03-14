@@ -7,12 +7,12 @@ export const metadata: Metadata = { title: 'All Products — Smartech Kenya' };
 
 export default function ProductsPage({ searchParams }: { searchParams: Record<string, string | undefined> }) {
   return (
-    <div className="min-h-screen bg-cream pt-[68px]">
+    <div className="min-h-screen bg-cream">
       {/* Page header */}
-      <div className="bg-cream-warm border-b border-cream-warm/80 py-12 px-6">
+      <div className="bg-cream-warm border-b border-cream-warm/80 py-10 px-6">
         <div className="max-w-[1320px] mx-auto">
-          <p className="overline text-forest-600 mb-2">Smartech Kenya</p>
-          <h1 className="font-display text-ink" style={{ fontSize: 'clamp(2.5rem,5vw,4rem)', fontWeight: 400 }}>
+          <p className="text-[10px] font-bold tracking-[0.14em] uppercase text-forest-600 mb-2">Smartech Kenya</p>
+          <h1 className="font-display text-ink" style={{ fontSize: 'clamp(2.2rem,4.5vw,3.5rem)', fontWeight: 400 }}>
             All Products
           </h1>
         </div>
