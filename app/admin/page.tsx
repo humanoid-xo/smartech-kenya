@@ -146,17 +146,21 @@ export default function AdminPage() {
         <div className="bg-ink rounded-2xl p-6 mb-8 grid md:grid-cols-2 gap-6">
           <div>
             <p className="text-[10px] font-bold tracking-widest uppercase mb-3" style={{ color:'#C4872C' }}>
-              Method 1 — WhatsApp (easiest)
+              Method 1 — Telegram Bot (free, easiest)
             </p>
             <ol className="text-cream/55 text-xs leading-relaxed space-y-1.5 list-decimal list-inside">
-              <li>Open WhatsApp on your phone</li>
-              <li>Message the Twilio number set up for your store</li>
-              <li>Send an image with the <strong className="text-cream/80">SKU code</strong> as the caption</li>
-              <li>E.g.: send photo, caption = <code className="bg-white/10 px-1 rounded">MRNF2D442XLBV</code></li>
-              <li>You&apos;ll get a confirmation reply and the site updates live</li>
+              <li>Open Telegram → search <strong className="text-cream/80">@BotFather</strong> → type <code className="bg-white/10 px-1 rounded">/newbot</code></li>
+              <li>Follow the prompts — get your <strong className="text-cream/80">bot token</strong></li>
+              <li>Add <code className="bg-white/10 px-1 rounded">TELEGRAM_BOT_TOKEN</code> to Vercel env vars</li>
+              <li>Get your Telegram user ID from <strong className="text-cream/80">@userinfobot</strong></li>
+              <li>Add <code className="bg-white/10 px-1 rounded">TELEGRAM_OWNER_ID</code> to Vercel env vars</li>
+              <li>Visit <code className="bg-white/10 px-1 rounded">/api/webhook/telegram?setup=1&secret=YOUR_ADMIN_SECRET</code></li>
+              <li>Now send your bot a photo — caption = SKU code. Done!</li>
             </ol>
             <p className="text-cream/25 text-[10px] mt-3">
-              Type LIST (no image) to get all SKU codes sent to you.
+              Send <code className="bg-white/10 px-1 rounded text-cream/50">LIST</code> to the bot (no photo) to get all SKU codes.
+              Send <code className="bg-white/10 px-1 rounded text-cream/50">SEARCH fridge</code> to find products by name.
+              100% free — no Twilio, no subscription.
             </p>
           </div>
           <div>
