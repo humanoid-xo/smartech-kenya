@@ -212,6 +212,146 @@ export default function AdminPage() {
   );
 }
 
+
+/* ── SKU Generator Component ───────────────────────────────────────────────── */
+function SkuGenerator() {
+  const [brand,   setBrand]   = useState('');
+  const [type,    setType]    = useState('');
+  const [model,   setModel]   = useState('');
+  const [variant, setVariant] = useState('');
+  const [manual,  setManual]  = useState('');
+  const [copied,  setCopied]  = useState(false);
+
+  // Auto-generate from parts: BRAND-TYPE-MODEL-VARIANT
+  // e.g. MIKA-FRIDGE-442L-SBS → MKF442SBS
+  const generated = (() => {
+    if (!brand && !type) return '';
+    const b = brand.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
+    const t = type.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 3);
+    const m = model.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+    const v = variant.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 3);
+    return [b, t, m, v].filter(Boolean).join('');
+  })();
+
+  const sku = manual || generated;
+
+  const copy = () => {
+    if (!sku) return;
+    navigator.clipboard.writeText(sku);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const BRAND_SHORTCUTS: Record<string, string> = {
+    'Mika': 'MK', 'Hisense': 'HIS', 'Samsung': 'SAM', 'LG': 'LG',
+    'Ramtons': 'RAM', 'HP': 'HP', 'Von Hotpoint': 'VON', 'Beko': 'BKO',
+  };
+  const TYPE_SHORTCUTS: Record<string, string> = {
+    'Fridge': 'FR', 'Washing Machine': 'WM', 'Water Dispenser': 'WD',
+    'Gas Hob': 'GH', 'Hood': 'HD', 'Cooker': 'CK', 'Microwave': 'MW',
+    'TV': 'TV', 'Smartphone': 'PH', 'Laptop': 'LP', 'Audio': 'AU',
+    'Air Conditioner': 'AC',
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {/* Brand */}
+        <div>
+          <label className="block text-[10px] font-bold tracking-widest uppercase text-ink/40 mb-1.5">Brand</label>
+          <select value={brand} onChange={e => setBrand(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-cream-warm bg-white text-sm text-ink focus:outline-none focus:border-amber-luxe">
+            <option value="">Select…</option>
+            {Object.keys(BRAND_SHORTCUTS).map(b => <option key={b} value={BRAND_SHORTCUTS[b]}>{b}</option>)}
+            <option value="CUSTOM">Other…</option>
+          </select>
+        </div>
+
+        {/* Product type */}
+        <div>
+          <label className="block text-[10px] font-bold tracking-widest uppercase text-ink/40 mb-1.5">Type</label>
+          <select value={type} onChange={e => setType(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-cream-warm bg-white text-sm text-ink focus:outline-none focus:border-amber-luxe">
+            <option value="">Select…</option>
+            {Object.keys(TYPE_SHORTCUTS).map(t => <option key={t} value={TYPE_SHORTCUTS[t]}>{t}</option>)}
+          </select>
+        </div>
+
+        {/* Model/size */}
+        <div>
+          <label className="block text-[10px] font-bold tracking-widest uppercase text-ink/40 mb-1.5">
+            Size / Model
+          </label>
+          <input type="text" value={model} onChange={e => setModel(e.target.value)}
+            placeholder="e.g. 442L, 8KG, 55IN"
+            className="w-full px-3 py-2 rounded-xl border border-cream-warm bg-white text-sm text-ink focus:outline-none focus:border-amber-luxe placeholder-cream-muted"/>
+        </div>
+
+        {/* Colour/variant */}
+        <div>
+          <label className="block text-[10px] font-bold tracking-widest uppercase text-ink/40 mb-1.5">
+            Colour / Variant
+          </label>
+          <input type="text" value={variant} onChange={e => setVariant(e.target.value)}
+            placeholder="e.g. SS, BLK, WHT"
+            className="w-full px-3 py-2 rounded-xl border border-cream-warm bg-white text-sm text-ink focus:outline-none focus:border-amber-luxe placeholder-cream-muted"/>
+        </div>
+      </div>
+
+      {/* Result + override */}
+      <div className="flex gap-3 items-end">
+        <div className="flex-1">
+          <label className="block text-[10px] font-bold tracking-widest uppercase text-ink/40 mb-1.5">
+            Generated SKU — or type your own
+          </label>
+          <input type="text" value={manual || generated}
+            onChange={e => setManual(e.target.value.toUpperCase().replace(/[^A-Z0-9/_-]/g, ''))}
+            placeholder="SKU will appear here"
+            className="w-full px-4 py-3 rounded-xl border-2 border-cream-warm bg-cream font-mono text-ink text-sm font-semibold tracking-widest focus:outline-none focus:border-amber-luxe uppercase"/>
+        </div>
+        <button onClick={copy} disabled={!sku}
+          className={`px-5 py-3 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
+            copied
+              ? 'bg-ink text-cream'
+              : 'bg-cream-warm text-ink hover:bg-ink hover:text-cream disabled:opacity-30'
+          }`}>
+          {copied ? (
+            <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/>
+              </svg>
+              Copied!
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+              </svg>
+              Copy SKU
+            </>
+          )}
+        </button>
+        <button onClick={() => { setBrand(''); setType(''); setModel(''); setVariant(''); setManual(''); }}
+          className="px-4 py-3 rounded-xl text-sm text-ink-faint hover:text-ink border border-cream-warm hover:border-ink/20 transition-all">
+          Clear
+        </button>
+      </div>
+
+      {/* Explanation */}
+      <div className="bg-cream-warm/50 rounded-xl p-4">
+        <p className="text-xs text-ink-muted leading-relaxed">
+          <strong className="text-ink">What is a SKU?</strong>&nbsp;
+          A SKU (Stock Keeping Unit) is a short unique code for each product — like a licence plate.
+          It&apos;s used to identify products when uploading images via Telegram or the admin page.
+          Example: <code className="bg-white px-1.5 py-0.5 rounded font-mono text-xs">MKF442LSS</code> =
+          Mika Fridge 442L Stainless Steel.
+          The manufacturer&apos;s model number (e.g. MRNF2D442XLBV) is the best SKU to use when it exists.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 /* ── Product card ── */
 function ProductCard({
   product, status, onDrop, onUpload,

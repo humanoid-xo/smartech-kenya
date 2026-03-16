@@ -103,11 +103,11 @@ export function Header() {
                 </Link>
 
                 {megaOpen === cat.slug && (
-                  <div className="absolute left-0 top-full pt-2 z-50 w-[320px]">
-                    <div className="bg-ink rounded-2xl shadow-[0_24px_80px_rgba(0,0,0,0.4)] overflow-hidden"
+                  <div className="absolute left-0 top-full pt-2 z-50 w-[300px]">
+                    <div className="bg-white rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.14)] border border-cream-warm overflow-hidden"
                       style={{ animation: 'scale-in 0.16s cubic-bezier(0.22,1,0.36,1) forwards' }}>
-                      <div className="px-5 pt-4 pb-2.5 border-b border-white/[0.07]">
-                        <p className="text-[10px] font-semibold tracking-widest uppercase text-cream/30">
+                      <div className="px-4 pt-3.5 pb-2.5 border-b border-cream-warm">
+                        <p className="text-[9.5px] font-bold tracking-[0.14em] uppercase text-ink/35">
                           {cat.description}
                         </p>
                       </div>
@@ -115,11 +115,10 @@ export function Header() {
                         {cat.subcategories.map(sub => (
                           <Link key={sub.slug}
                             href={`/products?category=${cat.enum}&subcategory=${sub.slug}`}
-                            className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl hover:bg-white/[0.07] transition-colors group/sub">
-                            {/* Dot instead of emoji */}
-                            <span className="w-1.5 h-1.5 rounded-full shrink-0 opacity-40 group-hover/sub:opacity-80 transition-opacity"
-                              style={{ background: '#C4872C' }}/>
-                            <span className="text-cream text-xs font-medium leading-tight group-hover/sub:text-white transition-colors truncate">
+                            className="flex items-center gap-2 px-3 py-2.5 rounded-xl hover:bg-cream-warm transition-colors group/sub">
+                            <span className="w-1.5 h-1.5 rounded-full shrink-0 opacity-50 group-hover/sub:opacity-100 transition-opacity"
+                              style={{ background: '#8B5A1A' }}/>
+                            <span className="text-ink/70 text-xs font-medium leading-tight group-hover/sub:text-ink transition-colors truncate">
                               {sub.name}
                             </span>
                           </Link>
