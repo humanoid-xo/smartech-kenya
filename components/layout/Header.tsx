@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { useSelector } from 'react-redux';
@@ -60,26 +61,18 @@ export function Header() {
         <div className="max-w-[1320px] mx-auto w-full px-5 flex items-center gap-5">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <div className={[
-              'w-8 h-8 rounded-xl flex items-center justify-center transition-colors',
-              onDark ? 'bg-cream/10 border border-cream/20 text-cream' : 'bg-ink text-cream',
-            ].join(' ')}>
-              <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
-                <path d="M3 9C3 5.686 5.686 3 9 3s6 2.686 6 6-2.686 6-6 6-6-2.686-6-6z" stroke="currentColor" strokeWidth="1.5"/>
-                <path d="M6.5 9h5M9 6.5v5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-            </div>
-            <div>
-              <span className={[
-                'font-display text-[1.05rem] font-medium tracking-widest leading-none transition-colors',
-                onDark ? 'text-cream' : 'text-ink',
-              ].join(' ')}>SMARTECH</span>
-              <span className={[
-                'block text-[7.5px] font-bold tracking-[0.2em] uppercase -mt-0.5 transition-colors',
-                onDark ? 'text-cream/30' : 'text-ink/25',
-              ].join(' ')}>KENYA</span>
-            </div>
+          <Link href="/" className="flex items-center shrink-0">
+            <Image
+              src="/logo.png"
+              alt="Smartech Kenya"
+              width={130}
+              height={35}
+              priority
+              className={[
+                'object-contain transition-all duration-200',
+                onDark ? 'brightness-0 invert' : '',
+              ].join(' ')}
+            />
           </Link>
 
           {/* Desktop nav */}

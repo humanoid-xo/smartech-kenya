@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { CATEGORIES } from '@/constants/categories';
 
 export function Footer() {
@@ -11,17 +12,14 @@ export function Footer() {
 
           {/* Brand + contact */}
           <div className="col-span-2">
-            <Link href="/" className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-white/[0.07] border border-cream/10 flex items-center justify-center">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <path d="M3 9C3 5.686 5.686 3 9 3s6 2.686 6 6-2.686 6-6 6-6-2.686-6-6z" stroke="#F5F0E8" strokeWidth="1.5"/>
-                  <path d="M6.5 9h5M9 6.5v5" stroke="#F5F0E8" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
-              </div>
-              <div>
-                <div className="font-display text-xl text-cream font-medium tracking-wide">SMARTECH</div>
-                <div className="overline text-cream/25 -mt-0.5">KENYA</div>
-              </div>
+            <Link href="/" className="inline-block mb-6">
+              <Image
+                src="/logo.png"
+                alt="Smartech Kenya"
+                width={140}
+                height={38}
+                className="object-contain brightness-0 invert opacity-90"
+              />
             </Link>
 
             <p className="text-cream/28 text-xs leading-relaxed mb-5 max-w-xs">

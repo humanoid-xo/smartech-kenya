@@ -79,14 +79,9 @@ export default function AdminPage() {
     return (
       <div className="min-h-screen bg-ink flex items-center justify-center px-4">
         <div className="w-full max-w-sm">
-          <div className="flex items-center gap-3 justify-center mb-10">
-            <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center">
-              <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
-                <path d="M3 9C3 5.686 5.686 3 9 3s6 2.686 6 6-2.686 6-6 6-6-2.686-6-6z" stroke="#F5F0E8" strokeWidth="1.5"/>
-                <path d="M6.5 9h5M9 6.5v5" stroke="#F5F0E8" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-            </div>
-            <span className="font-display text-cream text-lg tracking-widest">SMARTECH ADMIN</span>
+          <div className="flex justify-center mb-10">
+            <img src="/logo.png" alt="Smartech Kenya" width="140" height="38"
+              style={{ objectFit:'contain', filter:'brightness(0) invert(1)', opacity:0.9 }} />
           </div>
 
           <div className="bg-white/[0.06] border border-white/[0.08] rounded-2xl p-8">

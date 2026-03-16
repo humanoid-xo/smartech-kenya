@@ -4,6 +4,7 @@ import { useState }  from 'react';
 import { useForm }    from 'react-hook-form';
 import { signIn }     from 'next-auth/react';
 import { useRouter }  from 'next/navigation';
+import Image from 'next/image';
 import Link           from 'next/link';
 
 type Form = { name: string; email: string; phone?: string; password: string; confirm: string };
@@ -31,17 +32,8 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-cream-warm flex items-center justify-center px-4 py-20">
       <div className="w-full max-w-[400px]">
 
-        <Link href="/" className="flex items-center justify-center gap-3 mb-10">
-          <div className="w-10 h-10 rounded-xl bg-ink flex items-center justify-center">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path d="M3 9C3 5.686 5.686 3 9 3s6 2.686 6 6-2.686 6-6 6-6-2.686-6-6z" stroke="#F5F0E8" strokeWidth="1.5"/>
-              <path d="M6.5 9h5M9 6.5v5" stroke="#F5F0E8" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-          </div>
-          <div>
-            <div className="font-display text-xl text-ink font-medium tracking-wide">SMARTECH</div>
-            <div className="overline text-ink-faint -mt-0.5">KENYA</div>
-          </div>
+        <Link href="/" className="flex justify-center mb-10">
+          <Image src="/logo.png" alt="Smartech Kenya" width={160} height={44} className="object-contain" />
         </Link>
 
         <div className="bg-white rounded-3xl border border-cream-warm shadow-sm p-8">
