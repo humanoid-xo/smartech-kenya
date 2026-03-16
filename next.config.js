@@ -1,9 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint:     { ignoreDuringBuilds: true },
-  typescript: { ignoreBuildErrors:  true },
+  typescript: { ignoreBuildErrors: true },
 
-  // Don't bundle prisma — use native node modules at runtime
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
   },
@@ -15,20 +14,31 @@ const nextConfig = {
       { protocol: 'https', hostname: 'via.placeholder.com'          },
       { protocol: 'https', hostname: 'lh3.googleusercontent.com'    },
       { protocol: 'https', hostname: 'avatars.githubusercontent.com' },
-      { protocol: 'https', hostname: 'www.urbanappliances.co.ke'    },
+      // Twilio media (for webhook image download)
+      { protocol: 'https', hostname: 'api.twilio.com'               },
+      { protocol: 'https', hostname: '*.twilio.com'                  },
     ],
     formats: ['image/avif', 'image/webp'],
   },
 
   async headers() {
-    return [{
-      source: '/(.*)',
-      headers: [
-        { key: 'X-Frame-Options',        value: 'DENY'                           },
-        { key: 'X-Content-Type-Options',  value: 'nosniff'                        },
-        { key: 'Referrer-Policy',         value: 'strict-origin-when-cross-origin'},
-      ],
-    }];
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'X-Frame-Options',        value: 'DENY'                           },
+          { key: 'X-Content-Type-Options',  value: 'nosniff'                        },
+          { key: 'Referrer-Policy',         value: 'strict-origin-when-cross-origin'},
+        ],
+      },
+      // Allow Twilio to POST to webhook without CSRF issues
+      {
+        source: '/api/webhook/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+        ],
+      },
+    ];
   },
 };
 

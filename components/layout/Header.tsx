@@ -11,8 +11,9 @@ import { CATEGORIES } from '@/constants/categories';
 export function Header() {
   const pathname  = usePathname();
   const { data: session } = useSession();
-  const cartItems  = useSelector((s: RootState) => s.cart?.items ?? []);
-  const cartCount  = cartItems.reduce((n: number, i: any) => n + (i.quantity ?? 1), 0);
+  const cartItems     = useSelector((s: RootState) => s.cart?.items ?? []);
+  const cartCount     = cartItems.reduce((n: number, i: any) => n + (i.quantity ?? 1), 0);
+  const wishlistCount = useSelector((s: RootState) => s.wishlist?.items?.length ?? 0);
 
   const [scrolled,   setScrolled]   = useState(false);
   const [mobile,     setMobile]     = useState(false);
@@ -289,6 +290,20 @@ export function Header() {
               </div>
             ))}
 
+            <div className="px-5 py-3 border-t border-cream-warm/60 flex items-center justify-between">
+              <Link href="/wishlist" onClick={() => setMobile(false)}
+                className="flex items-center gap-2 text-sm text-ink-muted hover:text-ink transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+                Wishlist {wishlistCount > 0 && <span className="text-xs text-cream-muted">({wishlistCount})</span>}
+              </Link>
+              <Link href="/track-order" onClick={() => setMobile(false)}
+                className="text-sm text-ink-muted hover:text-ink transition-colors">
+                Track Order
+              </Link>
+            </div>
             <div className="p-5 space-y-2.5 border-t border-cream-warm">
               <a href="https://wa.me/254746722417?text=Hi%20Smartech%20Kenya%2C%20I%20want%20to%20order"
                 className="flex items-center justify-center gap-2 w-full py-3.5 bg-ink text-cream rounded-xl text-sm font-semibold">

@@ -5,18 +5,24 @@ declare global {
   var __prisma: PrismaClient | undefined;
 }
 
-function createPrismaClient() {
-  return new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
-  });
+function getPrismaClient(): PrismaClient {
+  if (process.env.NODE_ENV === 'production') {
+    return new PrismaClient({ log: ['error'] });
+  }
+  if (!globalThis.__prisma) {
+    globalThis.__prisma = new PrismaClient({ log: ['error', 'warn'] });
+  }
+  return globalThis.__prisma;
 }
 
-// Singleton — reuse across hot reloads in dev
-export const prisma: PrismaClient =
-  globalThis.__prisma ?? createPrismaClient();
+// Lazy singleton — only created when first accessed, not at module parse time
+let _client: PrismaClient | null = null;
 
-if (process.env.NODE_ENV !== 'production') {
-  globalThis.__prisma = prisma;
-}
+export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    if (!_client) _client = getPrismaClient();
+    return (_client as any)[prop];
+  },
+});
 
 export default prisma;

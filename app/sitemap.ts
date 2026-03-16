@@ -29,7 +29,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/products?category=TECH`,            lastModified: new Date(), changeFrequency: 'daily',  priority: 0.9 },
     { url: `${baseUrl}/products?category=KITCHEN`,         lastModified: new Date(), changeFrequency: 'daily',  priority: 0.9 },
     { url: `${baseUrl}/products?category=KITCHEN&subcategory=built-in`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.7 },
-    { url: `${baseUrl}/seller`,                            lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
     ...productUrls,
   ]
 }

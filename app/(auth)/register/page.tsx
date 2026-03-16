@@ -59,7 +59,7 @@ export default function RegisterPage() {
               <div key={id}>
                 <label className="block text-xs font-semibold text-ink-muted uppercase tracking-wide mb-2">{label}</label>
                 <input type={type} placeholder={ph} {...register(id as any, rules)}
-                  className="w-full px-4 py-3.5 rounded-xl border border-cream-warm bg-cream text-sm text-ink placeholder-cream-muted focus:outline-none focus:border-forest-600 focus:ring-2 focus:ring-forest-600/10 transition-all"
+                  className="w-full px-4 py-3.5 rounded-xl border border-cream-warm bg-cream text-sm text-ink placeholder-cream-muted focus:outline-none focus:border-amber-luxe focus:ring-2 focus:ring-amber-luxe/10 transition-all"
                 />
                 {(errors as any)[id] && <p className="text-red-500 text-xs mt-1">{(errors as any)[id]?.message}</p>}
               </div>
@@ -69,7 +69,7 @@ export default function RegisterPage() {
               <label className="block text-xs font-semibold text-ink-muted uppercase tracking-wide mb-2">Password</label>
               <input type="password" placeholder="Min. 8 chars, 1 uppercase, 1 number"
                 {...register('password', { required: 'Required', minLength: { value: 8, message: 'Min 8 chars' }, pattern: { value: /(?=.*[A-Z])(?=.*[0-9])/, message: 'Need uppercase & number' } })}
-                className="w-full px-4 py-3.5 rounded-xl border border-cream-warm bg-cream text-sm text-ink placeholder-cream-muted focus:outline-none focus:border-forest-600 focus:ring-2 focus:ring-forest-600/10 transition-all"
+                className="w-full px-4 py-3.5 rounded-xl border border-cream-warm bg-cream text-sm text-ink placeholder-cream-muted focus:outline-none focus:border-amber-luxe focus:ring-2 focus:ring-amber-luxe/10 transition-all"
               />
               {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
             </div>
@@ -78,7 +78,7 @@ export default function RegisterPage() {
               <label className="block text-xs font-semibold text-ink-muted uppercase tracking-wide mb-2">Confirm password</label>
               <input type="password" placeholder="••••••••"
                 {...register('confirm', { required: 'Required', validate: v => v === pw || 'Passwords must match' })}
-                className="w-full px-4 py-3.5 rounded-xl border border-cream-warm bg-cream text-sm text-ink placeholder-cream-muted focus:outline-none focus:border-forest-600 focus:ring-2 focus:ring-forest-600/10 transition-all"
+                className="w-full px-4 py-3.5 rounded-xl border border-cream-warm bg-cream text-sm text-ink placeholder-cream-muted focus:outline-none focus:border-amber-luxe focus:ring-2 focus:ring-amber-luxe/10 transition-all"
               />
               {errors.confirm && <p className="text-red-500 text-xs mt-1">{errors.confirm.message}</p>}
             </div>

@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user || !(session.user as any).isSeller) {
+    if (!session?.user || !(session.user as any).isAdmin) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
