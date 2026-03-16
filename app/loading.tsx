@@ -1,13 +1,13 @@
 export default function Loading() {
   return (
-    <div className="min-h-screen bg-navy-50 flex items-center justify-center">
+    <div className="min-h-[60vh] bg-cream flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
-        <div className="relative w-12 h-12">
-          <div className="absolute inset-0 rounded-full border-3 border-navy-200" />
-          <div className="absolute inset-0 rounded-full border-3 border-t-primary-600 animate-spin" />
+        <div className="relative w-10 h-10">
+          <div className="absolute inset-0 rounded-full border-2 border-cream-warm" />
+          <div className="absolute inset-0 rounded-full border-2 border-t-ink animate-spin" />
         </div>
-        <p className="text-navy-400 font-body text-sm font-medium">Loading…</p>
+        <p className="text-ink-faint text-sm font-medium tracking-wide">Loading…</p>
       </div>
     </div>
-  )
+  );
 }
