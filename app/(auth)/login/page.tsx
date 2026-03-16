@@ -53,7 +53,7 @@ export default function LoginPage() {
             <div>
               <div className="flex justify-between mb-2">
                 <label className="text-xs font-semibold text-ink-muted uppercase tracking-wide">Password</label>
-                <a href="https://wa.me/254746722417?text=I%20need%20help%20resetting%20my%20password" target="_blank" rel="noopener noreferrer" className="text-xs text-ink-faint hover:text-ink transition-colors">Forgot? Contact us</a>
+                <a href="/forgot-password" className="text-xs text-ink-faint hover:text-ink transition-colors">Forgot password?</a>
               </div>
               <input type="password" placeholder="••••••••"
                 {...register('password', { required: 'Required' })}

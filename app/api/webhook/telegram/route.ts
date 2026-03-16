@@ -211,10 +211,21 @@ export async function POST(req: NextRequest) {
     }
 
     if (!product) {
-      await reply(token, chatId,
-        `❌ Product "<b>${caption}</b>" not found.\n\n` +
-        `Send <b>LIST</b> to see all SKU codes, or <b>SEARCH ${caption}</b> to search.`
-      );
+      // Try to create a new product entry with just the SKU for now
+      // (admin will fill in details via admin page)
+      const skuClean = upper.replace(/[^A-Z0-9/_-]/g, '');
+      if (skuClean.length >= 3) {
+        await reply(token, chatId,
+          `❌ No product with SKU "<b>${caption}</b>" found.\n\n` +
+          `To add a new product:\n` +
+          `1. Go to your store admin page\n` +
+          `2. Add the product details there first\n` +
+          `3. Then send the photo here with the SKU\n\n` +
+          `Or send <b>LIST</b> to see existing SKUs.`
+        );
+      } else {
+        await reply(token, chatId, `SKU must be at least 3 characters. Send <b>LIST</b> to see all SKUs.`);
+      }
       return NextResponse.json({ ok: true });
     }
 

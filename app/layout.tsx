@@ -6,9 +6,11 @@ import { Footer }    from '@/components/layout/Footer';
 import { Toaster }   from 'react-hot-toast';
 
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://smartechkenya.vercel.app';
+let metadataBase: URL;
+try { metadataBase = new URL(SITE_URL); } catch { metadataBase = new URL('https://smartechkenya.vercel.app'); }
 
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
+  metadataBase,
   title: {
     default:  'Smartech Kenya — Premium Electronics & Home Appliances',
     template: '%s — Smartech Kenya',
