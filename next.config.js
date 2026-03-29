@@ -3,8 +3,9 @@ const nextConfig = {
   eslint:     { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
 
-  // serverComponentsExternalPackages moved to top-level in Next.js 14.1+
-  experimental: { serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
+  experimental: {
+    serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
+  },
 
   images: {
     remotePatterns: [
@@ -38,4 +39,3 @@ const nextConfig = {
 };
 
 module.exports = nextConfig;
-
