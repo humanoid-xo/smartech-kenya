@@ -92,6 +92,12 @@ const SHOP_CATS = [
     img:'https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?w=600&q=80' },
 ];
 
+const SOCIAL = [
+  { href: 'https://wa.me/254746722417',          label: 'WhatsApp'  },
+  { href: 'https://instagram.com/smartechkenya', label: 'Instagram' },
+  { href: 'https://tiktok.com/@smartechkenya',   label: 'TikTok'    },
+];
+
 export default async function HomePage() {
   const [featured, latest, kitchen] = await Promise.all([
     getFeatured(), getLatest(), getKitchen(),
@@ -108,7 +114,6 @@ export default async function HomePage() {
           fill priority sizes="100vw"
           className="object-cover object-center"
         />
-        {/* Gradient: very dark left third → fades cleanly to transparent */}
         <div className="absolute inset-0"
           style={{ background: 'linear-gradient(105deg, rgba(6,6,6,0.95) 0%, rgba(6,6,6,0.80) 38%, rgba(6,6,6,0.40) 65%, rgba(6,6,6,0.05) 100%)' }}/>
 
@@ -148,7 +153,6 @@ export default async function HomePage() {
               </a>
             </div>
 
-            {/* Delivery badges */}
             <div className="flex flex-wrap gap-5 mt-10 pt-8 border-t border-white/[0.15]">
               {['Genuine Products Only', 'Fast Nairobi Delivery', 'WhatsApp Support 7 Days'].map(t => (
                 <div key={t} className="flex items-center gap-2">
@@ -220,11 +224,9 @@ export default async function HomePage() {
               className="group relative rounded-2xl overflow-hidden bg-ink flex items-center"
               style={{ minHeight: '200px' }}>
               <div className="absolute inset-0 dot-grid opacity-70"/>
-              {/* Right side image — fades into left */}
               <div className="absolute right-0 top-0 bottom-0 w-[52%] hidden sm:block">
                 <Image src={b.img} alt={b.label} fill sizes="340px"
                   className="object-cover opacity-35 group-hover:opacity-50 transition-opacity duration-500"/>
-                {/* Gradient fades image into the dark left side */}
                 <div className="absolute inset-0"
                   style={{ background: 'linear-gradient(90deg, #0C0C0C 0%, rgba(12,12,12,0.85) 30%, rgba(12,12,12,0.20) 70%, transparent 100%)' }}/>
               </div>
@@ -266,7 +268,6 @@ export default async function HomePage() {
                 style={{ height: '158px' }}>
                 <Image src={c.img} alt={c.name} fill sizes="(max-width:768px) 50vw,25vw"
                   className="object-cover opacity-40 group-hover:opacity-55 transition-opacity duration-500"/>
-                {/* Strong bottom gradient so white text is always legible */}
                 <div className="absolute inset-0"
                   style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.30) 50%, rgba(0,0,0,0.05) 100%)' }}/>
                 <div className="absolute bottom-0 left-0 right-0 p-4">
@@ -355,18 +356,12 @@ export default async function HomePage() {
               style={{ color: 'rgba(245,240,232,0.55)' }}>
               New arrivals, exclusive offers and appliance news — no spam.
             </p>
+            {/* ── Social links — CSS hover only (no JS event handlers) ── */}
             <div className="flex gap-5 mt-8">
-              {[
-                { href: 'https://wa.me/254746722417',          l: 'WhatsApp'  },
-                { href: 'https://instagram.com/smartechkenya', l: 'Instagram' },
-                { href: 'https://tiktok.com/@smartechkenya',   l: 'TikTok'    },
-              ].map(s => (
-                <a key={s.l} href={s.href} target="_blank" rel="noopener noreferrer"
-                  className="text-xs font-semibold tracking-wide transition-colors"
-                  style={{ color: 'rgba(245,240,232,0.38)' }}
-                  onMouseEnter={e => (e.currentTarget.style.color = 'rgba(245,240,232,0.75)')}
-                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(245,240,232,0.38)')}>
-                  {s.l}
+              {SOCIAL.map(s => (
+                <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer"
+                  className="text-xs font-semibold tracking-wide text-cream/40 hover:text-cream/75 transition-colors">
+                  {s.label}
                 </a>
               ))}
             </div>

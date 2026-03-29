@@ -5,13 +5,22 @@ declare global {
   var __prisma: PrismaClient | undefined;
 }
 
-// Return the actual PrismaClient — never wrap it.
-// Wrapping with getters or Proxy causes 'this' binding to break
-// when methods like findMany() are called in Next.js server components.
+function makePrismaClient(): PrismaClient {
+  if (!process.env.DATABASE_URL) {
+    console.error('[Smartech] DATABASE_URL is not set — add it to Vercel environment variables.');
+  }
+  try {
+    return new PrismaClient({
+      log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+    });
+  } catch (e) {
+    console.error('[Smartech] PrismaClient init failed:', e);
+    return new PrismaClient();
+  }
+}
+
 export const prisma: PrismaClient =
-  globalThis.__prisma ?? new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
-  });
+  globalThis.__prisma ?? makePrismaClient();
 
 if (process.env.NODE_ENV !== 'production') {
   globalThis.__prisma = prisma;
