@@ -4,7 +4,7 @@ const nextConfig = {
   typescript: { ignoreBuildErrors: true },
 
   // serverComponentsExternalPackages moved to top-level in Next.js 14.1+
-  serverExternalPackages: ['@prisma/client', 'bcryptjs'],
+  experimental: { serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
 
   images: {
     remotePatterns: [
@@ -37,4 +37,5 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
+
