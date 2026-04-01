@@ -2,6 +2,7 @@ import Image   from 'next/image';
 import Link    from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { ProductCard } from '@/components/features/products/ProductCard';
+import { HERO_IMAGES } from '@/constants/heroImages';
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -56,41 +57,7 @@ async function getKitchen() {
   } catch { return []; }
 }
 
-const QUICK_CATS = [
-  { label: 'Fridges',          href: '/products?category=KITCHEN&subcategory=fridges'          },
-  { label: 'Washing Machines', href: '/products?category=KITCHEN&subcategory=washing-machines' },
-  { label: 'Water Dispensers', href: '/products?category=KITCHEN&subcategory=water-dispensers' },
-  { label: 'Hobs',             href: '/products?category=KITCHEN&subcategory=built-in'         },
-  { label: 'Hoods',            href: '/products?category=KITCHEN&subcategory=built-in'         },
-  { label: 'Cookers',          href: '/products?category=KITCHEN&subcategory=cookers'          },
-  { label: 'Microwaves',       href: '/products?category=KITCHEN&subcategory=microwaves'       },
-  { label: 'Smart TVs',        href: '/products?category=AUDIO_TV'                             },
-  { label: 'Smartphones',      href: '/products?category=SMARTPHONES'                          },
-  { label: 'Laptops',          href: '/products?category=LAPTOPS'                              },
-  { label: 'Audio',            href: '/products?category=AUDIO_TV&subcategory=audio'           },
-  { label: 'Smart Home',       href: '/products?category=SMART_HOME'                           },
-];
-
 const BRANDS = ['Mika','Hisense','Samsung','LG','Ramtons','HP','Von Hotpoint','Beko','Haier','TCL'];
-
-const SHOP_CATS = [
-  { name:'Fridges & Freezers',    href:'/products?category=KITCHEN&subcategory=fridges',
-    img:'https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=600&q=80' },
-  { name:'Washing Machines',      href:'/products?category=KITCHEN&subcategory=washing-machines',
-    img:'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?w=600&q=80' },
-  { name:'Water Dispensers',      href:'/products?category=KITCHEN&subcategory=water-dispensers',
-    img:'https://images.unsplash.com/photo-1548277539-ee5c7d9f4b3c?w=600&q=80' },
-  { name:'Built-in Hobs & Hoods', href:'/products?category=KITCHEN&subcategory=built-in',
-    img:'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80' },
-  { name:'Smart TVs',             href:'/products?category=AUDIO_TV',
-    img:'https://images.unsplash.com/photo-1593359677879-a4bb92f4834c?w=600&q=80' },
-  { name:'Smartphones',           href:'/products?category=SMARTPHONES',
-    img:'https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=600&q=80' },
-  { name:'Laptops',               href:'/products?category=LAPTOPS',
-    img:'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600&q=80' },
-  { name:'Small Appliances',      href:'/products?category=KITCHEN&subcategory=small-appliances',
-    img:'https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?w=600&q=80' },
-];
 
 const SOCIAL = [
   { href: 'https://wa.me/254746722417',          label: 'WhatsApp'  },
@@ -107,84 +74,96 @@ export default async function HomePage() {
     <div className="bg-cream">
 
       {/* ══ HERO ═════════════════════════════════════════════════════════════ */}
-      <section className="relative overflow-hidden" style={{ minHeight: '90vh' }}>
-        <Image
-          src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1920&q=80"
-          alt="Modern kitchen appliances"
-          fill priority sizes="100vw"
-          className="object-cover object-center"
-        />
-        <div className="absolute inset-0"
-          style={{ background: 'linear-gradient(105deg, rgba(6,6,6,0.95) 0%, rgba(6,6,6,0.80) 38%, rgba(6,6,6,0.40) 65%, rgba(6,6,6,0.05) 100%)' }}/>
+      <section className="relative overflow-hidden bg-ink">
+        <div className="max-w-[1320px] mx-auto px-6 grid lg:grid-cols-2 gap-0 items-center min-h-[88vh]">
 
-        <div className="relative max-w-[1320px] mx-auto px-6 flex items-end pb-24 lg:pb-32"
-          style={{ minHeight: '90vh' }}>
-          <div className="max-w-[560px]">
+          {/* ── LEFT: copy ───────────────────────────────────────────────────── */}
+          <div className="pt-12 pb-16 lg:pt-14 lg:pb-20 lg:pr-12 z-10 relative">
 
-            <p className="text-[10px] font-bold tracking-[0.22em] uppercase mb-6"
-              style={{ color: 'rgba(255,255,255,0.50)' }}>
-              Nairobi&apos;s Appliance Store
-            </p>
+            <div className="inline-flex items-center gap-2 mb-7 px-3 py-1.5 rounded-full border border-white/[0.12] bg-white/[0.05]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#F97316]"/>
+              <p className="text-[10px] font-bold tracking-[0.22em] uppercase text-white/50">
+                Nairobi&apos;s Appliance Store
+              </p>
+            </div>
 
             <h1 className="font-display text-white tracking-tight mb-6"
-              style={{ fontSize: 'clamp(2.8rem,6vw,5.2rem)', fontWeight: 400, lineHeight: 1.04 }}>
+              style={{ fontSize: 'clamp(2.4rem,4.5vw,4.4rem)', fontWeight: 400, lineHeight: 1.06 }}>
               Elevating Every Home,<br/>
-              One Appliance<br/>
+              <span style={{ color: '#F97316' }}>One Appliance</span><br/>
               at a Time.
             </h1>
 
             <p className="text-[15px] leading-relaxed mb-10 max-w-[400px]"
-              style={{ color: 'rgba(255,255,255,0.70)' }}>
+              style={{ color: 'rgba(255,255,255,0.60)' }}>
               Premium home appliances and electronics,
               curated for the modern Kenyan home.
+              Delivered fast across Nairobi.
             </p>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3 mb-10">
               <Link href="/products"
-                className="btn px-8 py-3.5 rounded-full bg-white text-ink hover:bg-cream text-sm font-semibold shadow-lg">
+                className="btn px-8 py-3.5 rounded-full text-sm font-semibold shadow-xl"
+                style={{ background: '#F97316', color: '#fff' }}>
                 Shop All Products
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3"/>
                 </svg>
               </Link>
               <a href="https://wa.me/254746722417?text=Hi%20Smartech%20Kenya%2C%20I%20want%20to%20order"
+                target="_blank" rel="noopener noreferrer"
                 className="btn-outline-cream text-sm px-8 py-3.5">
                 Order via WhatsApp
               </a>
             </div>
 
-            <div className="flex flex-wrap gap-5 mt-10 pt-8 border-t border-white/[0.15]">
-              {['Genuine Products Only', 'Fast Nairobi Delivery', 'WhatsApp Support 7 Days'].map(t => (
+            <div className="flex flex-wrap gap-6 pt-8 border-t border-white/[0.10]">
+              {['Genuine Products', 'Fast Nairobi Delivery', 'WhatsApp Support'].map(t => (
                 <div key={t} className="flex items-center gap-2">
-                  <svg className="w-3.5 h-3.5 shrink-0" style={{ color: '#D9A050' }}
+                  <svg className="w-3.5 h-3.5 shrink-0" style={{ color: '#F97316' }}
                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/>
                   </svg>
                   <span className="text-[11px] font-medium tracking-wide"
-                    style={{ color: 'rgba(255,255,255,0.65)' }}>
+                    style={{ color: 'rgba(255,255,255,0.55)' }}>
                     {t}
                   </span>
                 </div>
               ))}
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* ══ CATEGORY QUICK-NAV ═══════════════════════════════════════════════ */}
-      <section className="bg-white border-b border-cream-warm sticky top-[60px] z-30 shadow-[0_2px_16px_rgba(0,0,0,0.05)]">
-        <div className="max-w-[1320px] mx-auto px-4">
-          <div className="flex items-center overflow-x-auto hide-scrollbar">
-            {QUICK_CATS.map(c => (
-              <Link key={c.label} href={c.href}
-                className="flex-shrink-0 px-4 py-[14px] text-[11.5px] font-semibold
-                           text-ink/55 hover:text-ink
-                           border-b-2 border-transparent hover:border-ink/30
-                           transition-all tracking-wide whitespace-nowrap">
-                {c.label}
-              </Link>
+          {/* ── RIGHT: 2×2 product image grid ───────────────────────────────── */}
+          <div className="hidden lg:grid grid-cols-2 grid-rows-2 gap-3 py-6 pl-4"
+            style={{ height: '88vh' }}>
+            {HERO_IMAGES.map((img, i) => (
+              <div key={i}
+                className="relative rounded-2xl overflow-hidden bg-white/5 group"
+                style={{ minHeight: 0 }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={img.src}
+                  alt={img.alt}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 rounded-2xl"
+                  style={{ background: 'linear-gradient(180deg, transparent 55%, rgba(0,0,0,0.40) 100%)' }}/>
+              </div>
             ))}
           </div>
+
+          {/* mobile: single scrolling strip */}
+          <div className="lg:hidden -mx-6 pb-8 overflow-x-auto hide-scrollbar flex gap-3 px-6">
+            {HERO_IMAGES.map((img, i) => (
+              <div key={i} className="relative flex-shrink-0 rounded-xl overflow-hidden"
+                style={{ width: '72vw', height: '200px' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={img.src} alt={img.alt}
+                  className="w-full h-full object-cover"/>
+              </div>
+            ))}
+          </div>
+
         </div>
       </section>
 
@@ -254,28 +233,6 @@ export default async function HomePage() {
               </div>
             </Link>
           ))}
-        </div>
-      </section>
-
-      {/* ══ SHOP BY CATEGORY ═════════════════════════════════════════════════ */}
-      <section className="py-16 px-6 bg-cream">
-        <div className="max-w-[1320px] mx-auto">
-          <SectionHeader label="Browse" title="Shop by Category" href="/products" cta="All products"/>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
-            {SHOP_CATS.map(c => (
-              <Link key={c.name} href={c.href}
-                className="group relative rounded-2xl overflow-hidden bg-ink hover:-translate-y-0.5 transition-all duration-300 hover:shadow-xl"
-                style={{ height: '158px' }}>
-                <Image src={c.img} alt={c.name} fill sizes="(max-width:768px) 50vw,25vw"
-                  className="object-cover opacity-40 group-hover:opacity-55 transition-opacity duration-500"/>
-                <div className="absolute inset-0"
-                  style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.30) 50%, rgba(0,0,0,0.05) 100%)' }}/>
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <p className="text-white font-semibold text-sm leading-snug drop-shadow-sm">{c.name}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
         </div>
       </section>
 

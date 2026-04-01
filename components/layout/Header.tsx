@@ -19,18 +19,75 @@ const NAV = [
   { label: 'All Products',     href: '/products'                                               },
 ];
 
+function CustomerCareButton() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button onClick={() => setOpen(v => !v)} aria-label="Customer Care"
+        className="fixed bottom-6 left-6 z-[60] w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-transform hover:scale-105 active:scale-95"
+        style={{ background: '#F97316', boxShadow: '0 4px 24px rgba(249,115,22,0.45)' }}>
+        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+        </svg>
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-[59]" onClick={() => setOpen(false)}/>
+          <div className="fixed bottom-24 left-6 z-[60] w-72 bg-white rounded-2xl shadow-2xl overflow-hidden"
+            style={{ animation: 'scale-in 0.18s cubic-bezier(0.22,1,0.36,1) forwards' }}>
+            <div className="px-5 py-4 flex items-center justify-between" style={{ background: '#F97316' }}>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-white font-bold text-sm">Customer Care</p>
+                  <p className="text-white/75 text-[11px]">Smartech Kenya</p>
+                </div>
+              </div>
+              <button onClick={() => setOpen(false)} className="text-white/70 hover:text-white transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            <div className="px-5 py-5 text-center">
+              <p className="text-gray-500 text-sm mb-4 leading-relaxed">
+                Want to make an enquiry? Reach out and our team will guide you to the ideal choice.
+              </p>
+              <a href="tel:+254746722417"
+                className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-white font-bold text-sm hover:opacity-90 transition-opacity"
+                style={{ background: '#F97316' }}>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                </svg>
+                +254 746 722 417
+              </a>
+            </div>
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
 export function Header() {
-  const pathname      = usePathname();
-  const router        = useRouter();
+  const pathname = usePathname();
+  const router   = useRouter();
   const { data: session } = useSession();
   const cartItems     = useSelector((s: RootState) => s.cart?.items ?? []);
   const cartCount     = cartItems.reduce((n: number, i: any) => n + (i.quantity ?? 1), 0);
   const wishlistCount = useSelector((s: RootState) => s.wishlist?.items?.length ?? 0);
 
-  const [scrolled,    setScrolled]    = useState(false);
-  const [mobileOpen,  setMobileOpen]  = useState(false);
-  const [searchOpen,  setSearchOpen]  = useState(false);
-  const [searchVal,   setSearchVal]   = useState('');
+  const [scrolled,   setScrolled]   = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchVal,  setSearchVal]  = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
 
   const isHome  = pathname === '/';
@@ -38,133 +95,101 @@ export function Header() {
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 60);
-    window.addEventListener('scroll', fn, { passive: true });
-    fn();
+    window.addEventListener('scroll', fn, { passive: true }); fn();
     return () => window.removeEventListener('scroll', fn);
   }, []);
-
   useEffect(() => { setMobileOpen(false); }, [pathname]);
-
+  useEffect(() => { if (searchOpen) setTimeout(() => searchRef.current?.focus(), 50); }, [searchOpen]);
   useEffect(() => {
-    if (searchOpen) setTimeout(() => searchRef.current?.focus(), 50);
-  }, [searchOpen]);
-
-  useEffect(() => {
-    const fn = (e: KeyboardEvent) => { if (e.key === 'Escape') setSearchOpen(false); };
+    const fn = (e: KeyboardEvent) => { if (e.key === 'Escape') { setSearchOpen(false); setMobileOpen(false); } };
     window.addEventListener('keydown', fn);
     return () => window.removeEventListener('keydown', fn);
   }, []);
 
   const onDark = isHome && !scrolled;
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const q = searchVal.trim();
-    if (!q) return;
-    setSearchOpen(false);
-    setSearchVal('');
+    const q = searchVal.trim(); if (!q) return;
+    setSearchOpen(false); setSearchVal('');
     router.push(`/products?search=${encodeURIComponent(q)}`);
   };
 
   return (
     <>
-      {/* ── ANNOUNCEMENT BAR ─────────────────────────────────────────────── */}
-      <div className="bg-ink text-cream/55 text-[11px] text-center py-2.5 px-4 font-medium flex items-center justify-center gap-3 flex-wrap">
-        <span className="hidden sm:inline">Free delivery within Nairobi</span>
-        <span className="text-cream/20 hidden sm:inline">·</span>
-        <a href="https://wa.me/254746722417"
-          className="font-semibold transition-opacity hover:opacity-80"
-          style={{ color: '#D9A050' }}>
-          +254 746 722 417
-        </a>
-        <span className="text-cream/20">·</span>
-        <span className="text-cream/38">Mon–Sat 8am–7pm</span>
+      {/* ── TOP INFO BAR ─────────────────────────────────────────────────── */}
+      <div className="bg-gray-50 border-b border-gray-200 text-[11px] text-gray-500 py-1.5 px-4">
+        <div className="max-w-[1320px] mx-auto flex items-center justify-between flex-wrap gap-x-4 gap-y-0.5">
+          <div className="flex items-center gap-1.5">
+            <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{color:'#F97316'}}>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <span>Gaberone Plaza, 4th Floor, Shop A13 — Nairobi</span>
+          </div>
+          <div className="flex items-center gap-5">
+            <span>Mon–Sat 8am–7pm</span>
+            <a href="tel:+254746722417" className="flex items-center gap-1.5 font-semibold hover:opacity-75 transition-opacity" style={{color:'#F97316'}}>
+              <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+              </svg>
+              +254 746 722 417
+            </a>
+          </div>
+        </div>
       </div>
+
+      <CustomerCareButton />
 
       {/* ── MAIN HEADER ──────────────────────────────────────────────────── */}
       <header className={[
         'sticky top-0 z-50 transition-all duration-300',
         scrolled || !isHome
-          ? 'bg-white border-b border-cream-warm shadow-[0_1px_16px_rgba(0,0,0,0.06)]'
+          ? 'bg-white border-b border-gray-100 shadow-[0_1px_16px_rgba(0,0,0,0.06)]'
           : 'bg-transparent',
       ].join(' ')}>
 
-        {/* Top row: logo + actions */}
-        <div className="max-w-[1320px] mx-auto px-5 flex items-center gap-4 h-[60px]">
+        <div className="max-w-[1320px] mx-auto px-5 flex items-center gap-4 h-[62px]">
 
-          {/* Logo */}
+          {/* LOGO — unchanged from repo */}
           <Link href="/" className="shrink-0 flex items-center">
-            <Image
-              src="/logo.png"
-              alt="Smartech Kenya"
-              width={140}
-              height={40}
-              priority
-              className="object-contain h-9 w-auto"
-            />
+            <Image src="/logo.png" alt="Smartech Kenya" width={140} height={40} priority className="object-contain h-9 w-auto"/>
           </Link>
 
-          {/* Search bar — desktop centre */}
+          {/* Search — desktop */}
           <div className="hidden md:flex flex-1 max-w-lg mx-auto">
             <form onSubmit={handleSearch} className="relative w-full">
-              <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-faint pointer-events-none"
-                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
-              <input
-                type="text"
-                value={searchVal}
-                onChange={e => setSearchVal(e.target.value)}
+              <input type="text" value={searchVal} onChange={e => setSearchVal(e.target.value)}
                 placeholder="Search products, brands…"
-                className={[
-                  'w-full pl-10 pr-4 py-2.5 rounded-full text-sm transition-all duration-200 outline-none',
+                className={['w-full pl-10 pr-4 py-2.5 rounded-full text-sm transition-all duration-200 outline-none',
                   onDark
-                    ? 'bg-white/[0.12] border border-white/[0.20] text-cream placeholder-cream/40 focus:bg-white/[0.18]'
-                    : 'bg-cream-warm/70 border border-cream-warm text-ink placeholder-cream-muted focus:bg-white focus:border-ink/20',
-                ].join(' ')}
-              />
+                    ? 'bg-white/[0.12] border border-white/20 text-white placeholder-white/40 focus:bg-white/20'
+                    : 'bg-gray-100 border border-gray-200 text-gray-800 placeholder-gray-400 focus:bg-white focus:border-gray-300 focus:shadow-sm',
+                ].join(' ')}/>
             </form>
           </div>
 
           {/* Right actions */}
           <div className="flex items-center gap-0.5 ml-auto md:ml-0">
-
-            {/* Mobile search toggle */}
             <button onClick={() => setSearchOpen(!searchOpen)}
-              className={[
-                'md:hidden p-2.5 rounded-xl transition-colors',
-                onDark ? 'text-cream/65 hover:bg-cream/[0.08]' : 'text-ink-muted hover:bg-ink/[0.05]',
-              ].join(' ')}>
+              className={['md:hidden p-2.5 rounded-xl transition-colors', onDark ? 'text-white/65 hover:bg-white/10' : 'text-gray-500 hover:bg-gray-100'].join(' ')}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
             </button>
 
-            {/* WhatsApp */}
-            <a href="https://wa.me/254746722417?text=Hi%20Smartech%20Kenya%2C%20I%20want%20to%20order"
-              target="_blank" rel="noopener noreferrer"
-              className={[
-                'hidden xl:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all',
-                onDark ? 'text-cream/65 hover:bg-cream/[0.08]' : 'text-ink-muted hover:bg-ink/[0.05]',
-              ].join(' ')}>
+            <a href="https://wa.me/254746722417?text=Hi%20Smartech%20Kenya%2C%20I%20want%20to%20order" target="_blank" rel="noopener noreferrer"
+              className={['hidden xl:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all', onDark ? 'text-white/65 hover:bg-white/10' : 'text-gray-500 hover:bg-gray-100'].join(' ')}>
               Order via WhatsApp
             </a>
 
-            {/* ── ADMIN BADGE — only visible when logged in as admin ── */}
             {isAdmin && (
-              <Link
-                href="/admin"
-                className={[
-                  'hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wide transition-all ml-1',
-                  pathname.startsWith('/admin')
-                    ? 'bg-amber-400 text-ink'
-                    : onDark
-                      ? 'bg-amber-400/20 text-amber-300 hover:bg-amber-400/30'
-                      : 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100',
-                ].join(' ')}>
-                {/* Wrench icon */}
+              <Link href="/admin" className={['hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wide transition-all ml-1',
+                pathname.startsWith('/admin') ? 'bg-amber-400 text-gray-900'
+                  : onDark ? 'bg-amber-400/20 text-amber-300 hover:bg-amber-400/30'
+                  : 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100'].join(' ')}>
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>
                 </svg>
@@ -172,227 +197,128 @@ export function Header() {
               </Link>
             )}
 
-            {/* Wishlist */}
-            <Link href="/wishlist"
-              className={[
-                'relative p-2.5 rounded-xl transition-colors hidden sm:flex',
-                onDark ? 'text-cream/65 hover:bg-cream/[0.08]' : 'text-ink-muted hover:bg-ink/[0.05]',
-              ].join(' ')}>
-              <svg className="w-[19px] h-[19px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+            <Link href="/wishlist" className={['relative p-2.5 rounded-xl transition-colors hidden sm:flex', onDark ? 'text-white/65 hover:bg-white/10' : 'text-gray-500 hover:bg-gray-100'].join(' ')}>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
               </svg>
-              {wishlistCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-[16px] h-[16px] bg-ink text-cream text-[9px] font-bold rounded-full flex items-center justify-center">
-                  {wishlistCount}
-                </span>
-              )}
+              {wishlistCount > 0 && <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center text-white" style={{background:'#F97316'}}>{wishlistCount}</span>}
             </Link>
 
-            {/* Cart */}
-            <Link href="/cart"
-              className={[
-                'relative p-2.5 rounded-xl transition-colors',
-                onDark ? 'text-cream/65 hover:bg-cream/[0.08]' : 'text-ink-muted hover:bg-ink/[0.05]',
-              ].join(' ')}>
-              <svg className="w-[19px] h-[19px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                  d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+            <Link href="/cart" className={['relative p-2.5 rounded-xl transition-colors', onDark ? 'text-white/65 hover:bg-white/10' : 'text-gray-500 hover:bg-gray-100'].join(' ')}>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
               </svg>
-              {cartCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-[16px] h-[16px] bg-ink text-cream text-[9px] font-bold rounded-full flex items-center justify-center">
-                  {cartCount > 9 ? '9+' : cartCount}
-                </span>
-              )}
+              {cartCount > 0 && <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center text-white" style={{background:'#F97316'}}>{cartCount > 9 ? '9+' : cartCount}</span>}
             </Link>
 
-            {/* Auth — sign out or sign in */}
             {session ? (
-              <button onClick={() => signOut()}
-                className={[
-                  'hidden sm:flex items-center gap-1.5 pl-1.5 pr-3 py-1.5 rounded-full text-xs font-medium transition-all ml-1',
-                  onDark ? 'text-cream/65 hover:bg-cream/[0.08]' : 'text-ink-muted hover:bg-ink/[0.05]',
-                ].join(' ')}>
-                <div className="w-6 h-6 rounded-full bg-ink-soft flex items-center justify-center text-cream text-[10px] font-bold">
-                  {session.user?.name?.[0]?.toUpperCase() ?? 'U'}
-                </div>
-                Sign out
+              <button onClick={() => signOut()} className={['hidden sm:flex p-2.5 rounded-xl transition-colors', onDark ? 'text-white/65 hover:bg-white/10' : 'text-gray-500 hover:bg-gray-100'].join(' ')}>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
               </button>
             ) : (
-              <Link href="/login"
-                className={[
-                  'hidden sm:inline-flex px-4 py-2 rounded-full text-xs font-semibold transition-all ml-1',
-                  onDark
-                    ? 'bg-white/[0.12] text-cream border border-white/[0.20] hover:bg-white/[0.20]'
-                    : 'bg-ink text-cream hover:bg-ink-soft',
-                ].join(' ')}>
+              <Link href="/login" className={['hidden sm:inline-flex items-center gap-1.5 ml-1 px-4 py-2 rounded-xl text-xs font-semibold transition-all',
+                onDark ? 'bg-white/10 text-white hover:bg-white/20 border border-white/20' : 'bg-gray-900 text-white hover:bg-gray-700'].join(' ')}>
                 Sign in
               </Link>
             )}
 
-            {/* Mobile hamburger */}
             <button onClick={() => setMobileOpen(!mobileOpen)}
-              aria-label="Menu"
-              className={[
-                'lg:hidden p-2.5 rounded-xl transition-colors ml-1',
-                onDark ? 'text-cream hover:bg-cream/[0.08]' : 'text-ink hover:bg-ink/[0.05]',
-              ].join(' ')}>
+              className={['lg:hidden p-2.5 rounded-xl transition-colors ml-0.5', onDark ? 'text-white/65 hover:bg-white/10' : 'text-gray-500 hover:bg-gray-100'].join(' ')}>
               {mobileOpen
-                ? <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12"/>
-                  </svg>
-                : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16"/>
-                  </svg>
+                ? <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12"/></svg>
+                : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16"/></svg>
               }
             </button>
           </div>
         </div>
 
-        {/* ── CATEGORY NAV STRIP — desktop only ─────────────────────────── */}
-        <div className={[
-          'hidden lg:block border-t transition-colors',
-          onDark ? 'border-white/[0.08]' : 'border-cream-warm',
-        ].join(' ')}>
+        {/* Category nav strip */}
+        <div className={['hidden lg:block border-t transition-colors', onDark ? 'border-white/[0.08]' : 'border-gray-100'].join(' ')}>
           <div className="max-w-[1320px] mx-auto px-5 flex items-center overflow-x-auto hide-scrollbar">
             {NAV.map(n => (
               <Link key={n.href} href={n.href}
-                className={[
-                  'flex-shrink-0 px-4 py-2.5 text-[11.5px] font-semibold tracking-wide whitespace-nowrap transition-all',
-                  'border-b-2',
-                  pathname === '/products' && n.href === '/products'
-                    ? onDark ? 'border-white text-white' : 'border-ink text-ink'
-                    : onDark
-                      ? 'border-transparent text-cream/55 hover:text-cream hover:border-white/40'
-                      : 'border-transparent text-ink/50 hover:text-ink hover:border-ink/25',
-                ].join(' ')}>
+                className={['flex-shrink-0 px-4 py-2.5 text-[11.5px] font-semibold tracking-wide whitespace-nowrap transition-all border-b-2',
+                  onDark ? 'border-transparent text-white/50 hover:text-white hover:border-white/40'
+                         : 'border-transparent text-gray-400 hover:text-gray-800 hover:border-gray-300'].join(' ')}>
                 {n.label}
               </Link>
             ))}
             <div className="flex-1"/>
             <Link href="/products?isFeatured=true"
-              className={[
-                'flex-shrink-0 px-4 py-2.5 text-[11.5px] font-bold tracking-wide transition-all border-b-2 border-transparent',
-                onDark ? 'text-amber-light hover:text-amber-light/80' : 'text-amber-luxe hover:text-amber-luxe/70',
-              ].join(' ')}>
+              className={['flex-shrink-0 px-4 py-2.5 text-[11.5px] font-bold tracking-wide transition-all border-b-2 border-transparent',
+                onDark ? 'text-orange-400 hover:text-orange-300' : 'text-orange-500 hover:text-orange-600'].join(' ')}>
               Deals
             </Link>
           </div>
         </div>
       </header>
 
-      {/* ── MOBILE SEARCH OVERLAY ────────────────────────────────────────── */}
+      {/* Mobile search overlay */}
       {searchOpen && (
-        <div className="fixed inset-0 z-[55] flex items-start justify-center pt-[110px] px-4 md:hidden"
-          onClick={() => setSearchOpen(false)}>
-          <div className="absolute inset-0 bg-ink/65 backdrop-blur-md"/>
-          <div className="relative w-full max-w-md" onClick={e => e.stopPropagation()}
-            style={{ animation: 'scale-in 0.18s cubic-bezier(0.22,1,0.36,1) forwards' }}>
-            <form onSubmit={handleSearch}
-              className="flex items-center gap-3 bg-white rounded-2xl shadow-2xl px-5 py-4">
-              <svg className="w-5 h-5 text-ink-faint shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        <div className="fixed inset-0 z-[55] flex items-start justify-center pt-[100px] px-4 md:hidden" onClick={() => setSearchOpen(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-md"/>
+          <div className="relative w-full max-w-md" onClick={e => e.stopPropagation()} style={{animation:'scale-in 0.18s cubic-bezier(0.22,1,0.36,1) forwards'}}>
+            <form onSubmit={handleSearch} className="flex items-center gap-3 bg-white rounded-2xl shadow-2xl px-5 py-4">
+              <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
-              <input ref={searchRef} type="text" value={searchVal}
-                onChange={e => setSearchVal(e.target.value)}
-                placeholder="Search products, brands…"
-                className="flex-1 text-ink text-base outline-none placeholder-cream-muted bg-transparent"/>
+              <input ref={searchRef} type="text" value={searchVal} onChange={e => setSearchVal(e.target.value)}
+                placeholder="Search products, brands…" className="flex-1 text-gray-800 text-base outline-none placeholder-gray-400 bg-transparent"/>
               {searchVal && (
-                <button type="button" onClick={() => setSearchVal('')} className="text-ink-faint hover:text-ink">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
-                  </svg>
+                <button type="button" onClick={() => setSearchVal('')} className="text-gray-400 hover:text-gray-600">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
               )}
             </form>
-            <p className="text-cream/30 text-xs text-center mt-3">Press Enter to search</p>
           </div>
         </div>
       )}
 
-      {/* ── MOBILE DRAWER ────────────────────────────────────────────────── */}
+      {/* Mobile drawer */}
       {mobileOpen && (
         <div className="fixed inset-0 z-40 lg:hidden" onClick={() => setMobileOpen(false)}>
-          <div className="absolute inset-0 bg-ink/50 backdrop-blur-sm"/>
-          <nav className="absolute top-[calc(100px)] inset-x-0 bg-cream border-b border-cream-warm shadow-2xl overflow-y-auto max-h-[calc(100vh-100px)]"
-            onClick={e => e.stopPropagation()}
-            style={{ animation: 'fade-up 0.22s cubic-bezier(0.22,1,0.36,1) forwards' }}>
-
-            {/* Mobile search */}
-            <div className="px-5 py-3 border-b border-cream-warm/60">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"/>
+          <nav className="absolute top-[calc(62px+30px)] inset-x-0 bg-white border-b border-gray-100 shadow-2xl overflow-y-auto max-h-[calc(100vh-92px)]"
+            onClick={e => e.stopPropagation()} style={{animation:'fade-up 0.22s cubic-bezier(0.22,1,0.36,1) forwards'}}>
+            <div className="px-5 py-3 border-b border-gray-100">
               <form onSubmit={handleSearch} className="relative">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-faint pointer-events-none"
-                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
-                <input type="text" value={searchVal} onChange={e => setSearchVal(e.target.value)}
-                  placeholder="Search products…"
-                  className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-cream-warm text-sm text-ink placeholder-ink-faint outline-none"/>
+                <input type="text" value={searchVal} onChange={e => setSearchVal(e.target.value)} placeholder="Search products…"
+                  className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-gray-100 text-sm text-gray-800 placeholder-gray-400 outline-none"/>
               </form>
             </div>
-
-            {/* Nav links */}
             <div className="py-2">
               {NAV.map(n => (
                 <Link key={n.href} href={n.href} onClick={() => setMobileOpen(false)}
-                  className="flex items-center justify-between px-5 py-3.5 text-sm font-semibold text-ink hover:bg-cream-warm/50 transition-colors border-b border-cream-warm/30 last:border-0">
+                  className="flex items-center justify-between px-5 py-3.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0">
                   {n.label}
-                  <svg className="w-4 h-4 text-ink-faint" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7"/>
-                  </svg>
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7"/></svg>
                 </Link>
               ))}
               <Link href="/products?isFeatured=true" onClick={() => setMobileOpen(false)}
-                className="flex items-center justify-between px-5 py-3.5 text-sm font-bold border-b border-cream-warm/30 transition-colors hover:bg-cream-warm/50"
-                style={{ color: '#8B5A1A' }}>
+                className="flex items-center justify-between px-5 py-3.5 text-sm font-bold border-b border-gray-100 hover:bg-gray-50" style={{color:'#F97316'}}>
                 Deals
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7"/>
-                </svg>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7"/></svg>
               </Link>
             </div>
-
-            {/* Footer links */}
-            <div className="px-5 py-3 border-t border-cream-warm flex items-center gap-4 flex-wrap">
-              <Link href="/wishlist" onClick={() => setMobileOpen(false)}
-                className="text-sm text-ink-muted hover:text-ink transition-colors">
-                Wishlist {wishlistCount > 0 && `(${wishlistCount})`}
-              </Link>
-              <Link href="/track-order" onClick={() => setMobileOpen(false)}
-                className="text-sm text-ink-muted hover:text-ink transition-colors">
-                Track Order
-              </Link>
-              <Link href="/contact" onClick={() => setMobileOpen(false)}
-                className="text-sm text-ink-muted hover:text-ink transition-colors">
-                Contact
-              </Link>
-              {/* Admin link — mobile */}
-              {isAdmin && (
-                <Link href="/admin" onClick={() => setMobileOpen(false)}
-                  className="text-sm font-bold transition-colors"
-                  style={{ color: '#8B5A1A' }}>
-                  ⚙ Admin
-                </Link>
-              )}
+            <div className="px-5 py-3 border-t border-gray-100 flex items-center gap-4 flex-wrap">
+              <Link href="/wishlist" onClick={() => setMobileOpen(false)} className="text-sm text-gray-500 hover:text-gray-800 transition-colors">Wishlist {wishlistCount > 0 && `(${wishlistCount})`}</Link>
+              <Link href="/track-order" onClick={() => setMobileOpen(false)} className="text-sm text-gray-500 hover:text-gray-800 transition-colors">Track Order</Link>
+              <Link href="/contact" onClick={() => setMobileOpen(false)} className="text-sm text-gray-500 hover:text-gray-800 transition-colors">Contact</Link>
+              {isAdmin && <Link href="/admin" onClick={() => setMobileOpen(false)} className="text-sm font-bold" style={{color:'#F97316'}}>⚙ Admin</Link>}
             </div>
-
-            <div className="p-5 space-y-2.5 border-t border-cream-warm">
-              <a href="https://wa.me/254746722417?text=Hi%20Smartech%20Kenya%2C%20I%20want%20to%20order"
-                className="flex items-center justify-center gap-2 w-full py-3.5 bg-ink text-cream rounded-xl text-sm font-semibold">
-                Order via WhatsApp
-              </a>
+            <div className="p-5 space-y-2.5 border-t border-gray-100">
+              <a href="https://wa.me/254746722417?text=Hi%20Smartech%20Kenya%2C%20I%20want%20to%20order" target="_blank" rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full py-3.5 bg-gray-900 text-white rounded-xl text-sm font-semibold">Order via WhatsApp</a>
               {session ? (
-                <button onClick={() => signOut()}
-                  className="w-full py-3 text-sm font-medium text-ink-muted border border-cream-warm rounded-xl hover:bg-cream-warm transition-colors">
-                  Sign out
-                </button>
+                <button onClick={() => signOut()} className="w-full py-3 text-sm font-medium text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">Sign out</button>
               ) : (
                 <Link href="/login" onClick={() => setMobileOpen(false)}
-                  className="block w-full py-3 border border-ink text-ink text-sm font-semibold rounded-xl text-center hover:bg-ink hover:text-cream transition-all">
-                  Sign in
-                </Link>
+                  className="block w-full py-3 border border-gray-900 text-gray-900 text-sm font-semibold rounded-xl text-center hover:bg-gray-900 hover:text-white transition-all">Sign in</Link>
               )}
             </div>
           </nav>
