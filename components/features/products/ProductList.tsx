@@ -1,10 +1,10 @@
-import { prisma }      from '@/lib/db/prisma';
-import { ProductCard } from './ProductCard';
-import Link            from 'next/link';
+import { prisma }         from '@/lib/db/prisma';
+import { ProductCard }    from './ProductCard';
+import { STATIC_PRODUCTS } from '@/constants/staticProducts';
+import Link               from 'next/link';
 
 interface SearchParams { [key: string]: string | undefined }
 
-// Map the legacy 'TECH' nav value to real Prisma enum values
 const TECH_ENUMS = ['SMARTPHONES','LAPTOPS','AUDIO_TV','SMART_HOME','ELECTRICAL','BEDROOM'];
 
 async function getProducts(sp: SearchParams) {
@@ -57,51 +57,61 @@ async function getProducts(sp: SearchParams) {
       prisma.product.count({ where }),
     ]);
 
+    const mapped = products.map(p => ({
+      ...p,
+      avgRating:   p.reviews.length > 0 ? p.reviews.reduce((s,r) => s + r.rating, 0) / p.reviews.length : 0,
+      reviewCount: p.reviews.length,
+    }));
+
+    if (mapped.length > 0) {
+      return { products: mapped, total, pages: Math.ceil(total / limit), page, isStatic: false };
+    }
+
+    // DB returned nothing — fall through to static
+    throw new Error('empty');
+  } catch {
+    // ── Static fallback — filter STATIC_PRODUCTS to match search params ──
+    let filtered = [...STATIC_PRODUCTS];
+
+    if (category === 'TECH') {
+      filtered = filtered.filter(p => TECH_ENUMS.includes(p.category));
+    } else if (category) {
+      filtered = filtered.filter(p => p.category === category);
+    }
+    if (subcategory) filtered = filtered.filter(p => p.subcategory === subcategory);
+    if (brand)       filtered = filtered.filter(p => p.brand.toLowerCase() === brand.toLowerCase());
+    if (search) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(p =>
+        p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q)
+      );
+    }
+    if (minPrice !== undefined) filtered = filtered.filter(p => p.price >= minPrice);
+    if (maxPrice !== undefined) filtered = filtered.filter(p => p.price <= (maxPrice!));
+
+    const start   = (page - 1) * limit;
+    const sliced  = filtered.slice(start, start + limit);
+    const total   = filtered.length;
+
     return {
-      products: products.map(p => ({
-        ...p,
-        avgRating:   p.reviews.length > 0 ? p.reviews.reduce((s,r) => s + r.rating, 0) / p.reviews.length : 0,
-        reviewCount: p.reviews.length,
-      })),
+      products:  sliced as any[],
       total,
-      pages: Math.ceil(total / limit),
+      pages:     Math.ceil(total / limit),
       page,
-      error: null,
+      isStatic:  true,
     };
-  } catch (err: any) {
-    console.error('ProductList DB error:', err?.message ?? err);
-    return { products: [], total: 0, pages: 1, page: 1, error: err?.message ?? 'Database error' };
   }
 }
 
 export async function ProductList({ searchParams }: { searchParams: SearchParams }) {
-  const { products, total, pages, page, error } = await getProducts(searchParams);
-
-  /* ── DB / connection error ── */
-  if (error) {
-    return (
-      <div className="text-center py-20 bg-white rounded-2xl border border-cream-warm">
-        <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-red-50 flex items-center justify-center">
-          <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-              d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-          </svg>
-        </div>
-        <h3 className="font-semibold text-ink mb-1.5">Could not load products</h3>
-        <p className="text-ink-faint text-sm mb-6 max-w-xs mx-auto leading-relaxed">
-          We&apos;re having trouble connecting to our database. Please try again in a moment.
-        </p>
-        <Link href="/products" className="btn-dark px-6 py-3 inline-flex">Retry</Link>
-      </div>
-    );
-  }
+  const { products, total, pages, page, isStatic } = await getProducts(searchParams);
 
   /* ── Empty state ── */
   if (products.length === 0) {
     return (
       <div className="text-center py-20 bg-white rounded-2xl border border-cream-warm">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-cream-warm flex items-center justify-center">
-          <svg className="w-7 h-7 text-cream-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-purple-50 flex items-center justify-center">
+          <svg className="w-7 h-7 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
           </svg>
         </div>
@@ -124,6 +134,11 @@ export async function ProductList({ searchParams }: { searchParams: SearchParams
         <p className="text-sm text-ink-faint">
           <span className="font-semibold text-ink">{total}</span> product{total !== 1 ? 's' : ''}
         </p>
+        {isStatic && (
+          <span className="text-xs text-amber-600 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full font-medium">
+            Sample catalogue
+          </span>
+        )}
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
@@ -142,7 +157,7 @@ export async function ProductList({ searchParams }: { searchParams: SearchParams
             <Link key={p} href={buildPageUrl(p)}
               className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-medium transition-all ${
                 p === page
-                  ? 'bg-ink text-cream'
+                  ? 'bg-[#6D28D9] text-white'
                   : 'bg-white border border-cream-warm text-ink-muted hover:border-ink/20 hover:text-ink'
               }`}>
               {p}
