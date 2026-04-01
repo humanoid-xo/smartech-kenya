@@ -3,6 +3,12 @@ import Link    from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { ProductCard } from '@/components/features/products/ProductCard';
 import { HERO_IMAGES } from '@/constants/heroImages';
+import {
+  STATIC_FEATURED,
+  STATIC_KITCHEN,
+  STATIC_LATEST,
+  type StaticProduct,
+} from '@/constants/staticProducts';
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -19,12 +25,13 @@ async function getFeatured() {
       include: { reviews: { select: { rating: true } } },
       take: 8, orderBy: { createdAt: 'desc' },
     });
-    return rows.map(p => ({
+    const mapped = rows.map(p => ({
       ...p,
       avgRating:   p.reviews.length > 0 ? p.reviews.reduce((s,r)=>s+r.rating,0)/p.reviews.length : 0,
       reviewCount: p.reviews.length,
     }));
-  } catch { return []; }
+    return mapped.length > 0 ? mapped : (STATIC_FEATURED as any[]);
+  } catch { return STATIC_FEATURED as any[]; }
 }
 
 async function getLatest() {
@@ -34,12 +41,13 @@ async function getLatest() {
       include: { reviews: { select: { rating: true } } },
       take: 4, orderBy: { createdAt: 'desc' },
     });
-    return rows.map(p => ({
+    const mapped = rows.map(p => ({
       ...p,
       avgRating:   p.reviews.length > 0 ? p.reviews.reduce((s,r)=>s+r.rating,0)/p.reviews.length : 0,
       reviewCount: p.reviews.length,
     }));
-  } catch { return []; }
+    return mapped.length > 0 ? mapped : (STATIC_LATEST as any[]);
+  } catch { return STATIC_LATEST as any[]; }
 }
 
 async function getKitchen() {
@@ -49,12 +57,13 @@ async function getKitchen() {
       include: { reviews: { select: { rating: true } } },
       take: 4, orderBy: { createdAt: 'desc' },
     });
-    return rows.map(p => ({
+    const mapped = rows.map(p => ({
       ...p,
       avgRating:   p.reviews.length > 0 ? p.reviews.reduce((s,r)=>s+r.rating,0)/p.reviews.length : 0,
       reviewCount: p.reviews.length,
     }));
-  } catch { return []; }
+    return mapped.length > 0 ? mapped : (STATIC_KITCHEN.slice(0,4) as any[]);
+  } catch { return STATIC_KITCHEN.slice(0,4) as any[]; }
 }
 
 const BRANDS = ['Mika','Hisense','Samsung','LG','Ramtons','HP','Von Hotpoint','Beko','Haier','TCL'];
