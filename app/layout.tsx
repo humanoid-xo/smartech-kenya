@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { FloatingContact } from "@/components/layout/FloatingContact";
 import { TopBar } from "@/components/layout/TopBar";
 import { Providers } from "@/components/Providers";
 
@@ -22,6 +23,7 @@ export default function RootLayout({
         <TopBar />
         <Providers>
           {children}
+          <FloatingContact />
         </Providers>
       </body>
     </html>
