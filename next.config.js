@@ -14,6 +14,8 @@ const nextConfig = {
       { protocol: 'https', hostname: 'via.placeholder.com'           },
       { protocol: 'https', hostname: 'lh3.googleusercontent.com'     },
       { protocol: 'https', hostname: 'avatars.githubusercontent.com' },
+      { protocol: 'https', hostname: 'picsum.photos'                 },
+      { protocol: 'https', hostname: 'fastly.picsum.photos'          },
     ],
     formats: ['image/avif', 'image/webp'],
   },
