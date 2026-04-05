@@ -1,89 +1,86 @@
 #!/usr/bin/env python3
-r""""""
-╔══════════════════════════════════════════════════════════════╗
-║  SMARTECH KENYA — PRODUCTS FIX + FOLDER UPLOAD DEPLOY       ║
-║                                                              ║
-║  Run from repo root:                                         ║
-║  cd C:\Users\User\Downloads\smartech-kenya-main\             ║
-║                       smartech-kenya-main                    ║
-║  python fix\deploy.py                                        ║
-╚══════════════════════════════════════════════════════════════╝
+"""
+deploy.py — Fix 4 issues and push to git.
+
+Issues fixed:
+  1. 404 on product click  → staticProducts gets slug + stock; detail page checks static fallback
+  2. Homepage no products  → getFeatured/getLatest/getKitchen fall back to static products
+  3. "Sample catalogue"    → badge removed from ProductList
+  4. Admin image upload    → SKU is now auto-generated when left blank
+
+Run from the root of your smartech-kenya repo:
+    python deploy.py
 """
 
-import os, sys, shutil, subprocess
-from pathlib import Path
-from datetime import datetime
+import os
+import shutil
+import subprocess
+import sys
 
-GREEN  = "\033[92m"; YELLOW = "\033[93m"
-RED    = "\033[91m"; CYAN   = "\033[96m"
-BOLD   = "\033[1m";  RESET  = "\033[0m"
-
-def ok(m):   print(f"{GREEN}  ✓  {m}{RESET}")
-def warn(m): print(f"{YELLOW}  ⚠  {m}{RESET}")
-def err(m):  print(f"{RED}  ✗  {m}{RESET}")
-def info(m): print(f"{CYAN}  →  {m}{RESET}")
-
-REPO  = Path(__file__).parent.parent.resolve()
-FIXES = Path(__file__).parent.resolve()
+REPO = os.path.dirname(os.path.abspath(__file__))
+FIXES = os.path.join(REPO, 'fixes')   # the folder this script ships with
 
 FILES = [
-    ("components/features/products/ProductList.tsx",  "components/features/products/ProductList.tsx"),
-    ("app/admin/page.tsx",                             "app/admin/page.tsx"),
+    # (source relative to fixes/, destination relative to repo root)
+    ('constants/staticProducts.ts',                      'constants/staticProducts.ts'),
+    ('app/page.tsx',                                     'app/page.tsx'),
+    ('app/(shop)/products/[slug]/page.tsx',              'app/(shop)/products/[slug]/page.tsx'),
+    ('components/features/products/ProductList.tsx',     'components/features/products/ProductList.tsx'),
+    ('app/api/admin/products/route.ts',                  'app/api/admin/products/route.ts'),
 ]
 
+COMMIT_MSG = (
+    'fix: product 404, homepage empty, sample-catalogue label, admin SKU auto-gen\n\n'
+    '- staticProducts: add slug + stock fields (fixes 404 on click + homepage render)\n'
+    '- app/page.tsx: getFeatured/getLatest/getKitchen fall back to STATIC_PRODUCTS\n'
+    '- [slug]/page.tsx: check STATIC_PRODUCTS when DB product not found\n'
+    '- ProductList: remove "Sample catalogue" badge\n'
+    '- api/admin/products: auto-generate SKU when not supplied'
+)
+
 def run(cmd):
-    try:
-        r = subprocess.run(cmd, cwd=str(REPO), capture_output=True, text=True)
-        return r if r.returncode == 0 else None
-    except FileNotFoundError:
-        return None
+    print(f'  $ {cmd}')
+    r = subprocess.run(cmd, shell=True, cwd=REPO)
+    if r.returncode != 0:
+        print(f'  ✗ failed (exit {r.returncode})')
+        sys.exit(r.returncode)
+
 
 def main():
-    print(f"\n{BOLD}{'═'*58}")
-    print(f"  SMARTECH KENYA — Products Fix + Folder Upload")
-    print(f"  {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-    print(f"{'═'*58}{RESET}")
-    info(f"Repo: {REPO}")
+    print('─' * 62)
+    print('  Smartech Kenya — 4-issue fix deploy')
+    print('─' * 62)
 
-    print()
+    if not os.path.isdir(FIXES):
+        print(f'\n✗ "fixes/" folder not found next to deploy.py\n'
+              f'  Expected: {FIXES}')
+        sys.exit(1)
+
+    staged = []
     for src_rel, dst_rel in FILES:
-        src = FIXES / src_rel
-        dst = REPO  / dst_rel
-        if not src.exists():
-            err(f"MISSING: fix/{src_rel}"); sys.exit(1)
-        dst.parent.mkdir(parents=True, exist_ok=True)
+        src = os.path.join(FIXES, src_rel)
+        dst = os.path.join(REPO, dst_rel)
+
+        if not os.path.exists(src):
+            print(f'\n✗ Source file missing: {src}')
+            sys.exit(1)
+
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
         shutil.copy2(src, dst)
-        ok(f"→ {dst_rel}")
+        print(f'  ✔ copied → {dst_rel}')
+        staged.append(dst_rel)
 
-    # Git push
-    r = run(["git", "status", "--short"])
-    if r is None:
-        err("git not available"); sys.exit(1)
-    if not r.stdout.strip():
-        ok("Nothing to commit"); return
+    print('\n── Git ─────────────────────────────────────────────────')
+    for f in staged:
+        # git requires forward slashes even on Windows
+        run(f'git add "{f}"')
 
-    run(["git", "add", "-A"])
-    msg = f"fix: products static fallback + folder/bulk image upload admin ({datetime.now().strftime('%H:%M')})"
-    r2  = run(["git", "commit", "-m", msg])
-    if r2 is None:
-        err("git commit failed"); sys.exit(1)
-    ok(f"Committed")
+    run(f'git commit -m "{COMMIT_MSG}"')
+    run('git push origin main')
 
-    info("Pushing to origin…")
-    r3 = run(["git", "push"])
-    if r3 is None:
-        br = run(["git", "branch", "--show-current"])
-        branch = br.stdout.strip() if br else "main"
-        r4 = run(["git", "push", "--set-upstream", "origin", branch])
-        if r4 is None:
-            err("git push failed"); sys.exit(1)
-    ok("Pushed ✓ — Vercel auto-deploys in ~60s")
+    print('\n✔ Done — Vercel will rebuild automatically.')
+    print('─' * 62)
 
-    print(f"\n{BOLD}{GREEN}{'═'*58}")
-    print("  DONE 🚀")
-    print(f"  Products now show even without DATABASE_URL")
-    print(f"  Admin → 📁 Folder Upload tab for bulk images")
-    print(f"{'═'*58}{RESET}\n")
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
