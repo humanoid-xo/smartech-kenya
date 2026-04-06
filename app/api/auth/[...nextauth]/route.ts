@@ -1,8 +1,10 @@
-import NextAuth   from 'next-auth';
-import { authOptions } from '@/lib/auth/config';
+/**
+ * NextAuth is no longer used — auth is handled by ADMIN_SECRET for the admin
+ * panel, and customer login is not required for browsing products.
+ * This stub prevents 404s on any existing links.
+ */
+import { NextResponse } from 'next/server';
 
-// Prevent Next.js from trying to statically generate this route at build time
 export const dynamic = 'force-dynamic';
-
-const handler = NextAuth(authOptions);
-export { handler as GET, handler as POST };
+export async function GET()  { return NextResponse.json({ message: 'Auth not configured' }, { status: 501 }); }
+export async function POST() { return NextResponse.json({ message: 'Auth not configured' }, { status: 501 }); }
