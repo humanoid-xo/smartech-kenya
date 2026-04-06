@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
-import Image from 'next/image';
+import { useState, useRef, useCallback } from 'react';
 
 /* ── Types ── */
 interface Product {
@@ -13,23 +12,23 @@ interface Product {
 }
 
 interface UploadJob {
-  file:    File;
-  sku:     string;
-  name:    string;
-  status:  'pending' | 'uploading' | 'done' | 'error' | 'no-match';
-  url?:    string;
-  error?:  string;
+  file:   File;
+  sku:    string;
+  name:   string;
+  status: 'pending' | 'uploading' | 'done' | 'error' | 'no-match';
+  url?:   string;
+  error?: string;
 }
 
 const CATEGORIES = [
-  { value: 'SMARTPHONES',     label: 'Smartphones'      },
-  { value: 'LAPTOPS',         label: 'Laptops'          },
-  { value: 'HOME_APPLIANCES', label: 'Home Appliances'  },
-  { value: 'KITCHEN',         label: 'Kitchen'          },
-  { value: 'BEDROOM',         label: 'Bedroom'          },
-  { value: 'AUDIO_TV',        label: 'Audio & TV'       },
-  { value: 'ELECTRICAL',      label: 'Electrical'       },
-  { value: 'SMART_HOME',      label: 'Smart Home'       },
+  { value: 'SMARTPHONES',     label: 'Smartphones'     },
+  { value: 'LAPTOPS',         label: 'Laptops'         },
+  { value: 'HOME_APPLIANCES', label: 'Home Appliances' },
+  { value: 'KITCHEN',         label: 'Kitchen'         },
+  { value: 'BEDROOM',         label: 'Bedroom'         },
+  { value: 'AUDIO_TV',        label: 'Audio & TV'      },
+  { value: 'ELECTRICAL',      label: 'Electrical'      },
+  { value: 'SMART_HOME',      label: 'Smart Home'      },
 ];
 
 const BRANDS = [
@@ -42,16 +41,12 @@ function isPlaceholder(img: string) {
   return !img || img.includes('unsplash.com');
 }
 
-/** Match a filename (without extension) to a product SKU or name slug */
 function matchFile(filename: string, products: Product[]): Product | null {
   const base = filename.toLowerCase().replace(/\.[^.]+$/, '').replace(/[^a-z0-9]/g, '-');
-  // exact SKU match
   const bySku = products.find(p => p.sku.toLowerCase().replace(/[^a-z0-9]/g, '-') === base);
   if (bySku) return bySku;
-  // partial SKU match
   const skuPartial = products.find(p => base.includes(p.sku.toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 6)));
   if (skuPartial) return skuPartial;
-  // name slug match
   const byName = products.find(p => {
     const slug = p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 30);
     return base.includes(slug.substring(0, 15)) || slug.includes(base.substring(0, 15));
@@ -68,18 +63,14 @@ async function fileToBase64(file: File): Promise<string> {
   });
 }
 
-/* ════════════════════════════════════════════════════════
-   MAIN PAGE
-   ════════════════════════════════════════════════════════ */
 export default function AdminPage() {
   const [secret,   setSecret]   = useState('');
   const [authed,   setAuthed]   = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
-  const [tab,      setTab]      = useState<'folder'|'images'|'add'>('folder');
+  const [tab,      setTab]      = useState<'images'|'folder'|'add'>('images');
 
-  /* ── Auth ── */
   const login = async () => {
     setLoading(true); setError('');
     try {
@@ -92,33 +83,38 @@ export default function AdminPage() {
     setLoading(false);
   };
 
-  /* ── Login screen ── */
   if (!authed) {
     return (
-      <div className="min-h-screen bg-[#2E1065] flex items-center justify-center px-4">
+      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#0C0C0C' }}>
         <div className="w-full max-w-sm">
-          <div className="text-center mb-8">
-            <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center mx-auto mb-4">
-              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="text-center mb-10">
+            <div className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center"
+              style={{ background: 'rgba(139,90,26,0.15)', border: '1px solid rgba(139,90,26,0.30)' }}>
+              <svg className="w-7 h-7" style={{ color: '#C4872C' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
                   d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
               </svg>
             </div>
-            <h1 className="text-white text-2xl font-bold">Admin Panel</h1>
-            <p className="text-white/50 text-sm mt-1">Smartech Kenya</p>
+            <h1 className="text-white text-2xl font-semibold tracking-tight">Admin Panel</h1>
+            <p className="text-sm mt-1.5" style={{ color: 'rgba(245,240,232,0.35)' }}>Smartech Kenya</p>
           </div>
           <div className="space-y-3">
-            <input
-              type="password" value={secret} onChange={e => setSecret(e.target.value)}
+            <input type="password" value={secret} onChange={e => setSecret(e.target.value)}
               placeholder="Admin password"
               onKeyDown={e => e.key === 'Enter' && login()}
-              className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 text-sm focus:outline-none focus:border-purple-400"
-            />
-            {error && <p className="text-red-300 text-xs text-center">{error}</p>}
+              className="w-full px-4 py-3.5 rounded-xl text-sm focus:outline-none"
+              style={{ background: 'rgba(245,240,232,0.05)', border: '1px solid rgba(245,240,232,0.12)', color: '#F5F0E8' }}/>
+            {error && <p className="text-red-400 text-xs text-center">{error}</p>}
             <button onClick={login} disabled={loading || !secret.trim()}
-              className="w-full py-3 rounded-xl bg-white text-[#6D28D9] text-sm font-bold hover:bg-purple-50 disabled:opacity-50 transition-all">
+              className="w-full py-3.5 rounded-xl text-sm font-bold transition-all disabled:opacity-40"
+              style={{ background: '#8B5A1A', color: '#F5F0E8' }}>
               {loading ? 'Signing in…' : 'Sign in'}
             </button>
+          </div>
+          <div className="mt-8 p-4 rounded-xl text-xs leading-relaxed"
+            style={{ background: 'rgba(245,240,232,0.04)', border: '1px solid rgba(245,240,232,0.08)', color: 'rgba(245,240,232,0.40)' }}>
+            <p className="font-semibold mb-1.5" style={{ color: 'rgba(245,240,232,0.60)' }}>How to upload product images</p>
+            <p>Sign in → <strong style={{ color: 'rgba(245,240,232,0.55)' }}>Image Manager</strong> → click any product card → select image from your computer. Saves automatically to Cloudinary.</p>
           </div>
         </div>
       </div>
@@ -129,33 +125,44 @@ export default function AdminPage() {
   const hasImage = products.length - noImage;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-[#2E1065] text-white px-6 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="font-bold text-lg">Admin Panel</h1>
-          <p className="text-white/50 text-xs">{products.length} products · {hasImage} with images · {noImage} need images</p>
+    <div className="min-h-screen" style={{ background: '#F5F0E8' }}>
+      <div className="sticky top-0 z-30" style={{ background: '#0C0C0C', borderBottom: '1px solid rgba(245,240,232,0.08)' }}>
+        <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: 'rgba(139,90,26,0.25)' }}>
+              <svg className="w-3.5 h-3.5" style={{ color: '#C4872C' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>
+              </svg>
+            </div>
+            <span className="text-white font-semibold text-sm">Admin Panel</span>
+            <span className="hidden sm:block text-xs px-2.5 py-0.5 rounded-full font-medium"
+              style={{ background: 'rgba(139,90,26,0.20)', color: '#D9A050' }}>
+              {products.length} products · {hasImage} with images · {noImage} need images
+            </span>
+          </div>
+          <button onClick={() => setAuthed(false)}
+            className="text-xs px-3 py-1.5 rounded-lg"
+            style={{ color: 'rgba(245,240,232,0.40)', border: '1px solid rgba(245,240,232,0.10)' }}>
+            Sign out
+          </button>
         </div>
-        <button onClick={() => setAuthed(false)}
-          className="text-white/50 hover:text-white text-xs border border-white/20 px-3 py-1.5 rounded-lg transition-colors">
-          Sign out
-        </button>
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-gray-200 bg-white">
-        <div className="max-w-5xl mx-auto px-6 flex gap-1">
+      <div style={{ background: 'white', borderBottom: '1px solid #EDE7D9' }}>
+        <div className="max-w-5xl mx-auto px-6 flex">
           {([
-            { id: 'folder', label: '📁 Folder Upload', desc: 'Upload whole folder' },
-            { id: 'images', label: '🖼 Image Manager', desc: 'Per-product upload' },
-            { id: 'add',    label: '➕ Add Product',   desc: 'New product form'  },
+            { id: 'images', icon: '🖼', label: 'Image Manager' },
+            { id: 'folder', icon: '📁', label: 'Folder Upload'  },
+            { id: 'add',    icon: '＋', label: 'Add Product'    },
           ] as const).map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className={`px-5 py-3.5 text-sm font-semibold border-b-2 transition-all ${
-                tab === t.id
-                  ? 'border-[#6D28D9] text-[#6D28D9]'
-                  : 'border-transparent text-gray-500 hover:text-gray-800'
-              }`}>
+              className="px-5 py-4 text-sm font-semibold border-b-2 transition-all flex items-center gap-2"
+              style={{
+                borderColor: tab === t.id ? '#8B5A1A' : 'transparent',
+                color: tab === t.id ? '#8B5A1A' : '#6B6B6B',
+              }}>
+              <span className="text-base leading-none">{t.icon}</span>
               {t.label}
             </button>
           ))}
@@ -163,67 +170,219 @@ export default function AdminPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-8">
-        {tab === 'folder' && <FolderUpload products={products} secret={secret} onDone={p => setProducts(p)} />}
         {tab === 'images' && <ImageManager products={products} secret={secret} onUpdate={p => setProducts(p)} />}
+        {tab === 'folder' && <FolderUpload products={products} secret={secret} onDone={p => setProducts(p)} />}
         {tab === 'add'    && <AddProduct   secret={secret} />}
       </div>
     </div>
   );
 }
 
-/* ════════════════════════════════════════════════════════
-   FOLDER UPLOAD TAB
-   ════════════════════════════════════════════════════════ */
+function ImageManager({ products, secret, onUpdate }: {
+  products: Product[];
+  secret:   string;
+  onUpdate: (p: Product[]) => void;
+}) {
+  const [status,  setStatus]  = useState<Record<string,'uploading'|'done'|'error'>>({});
+  const [search,  setSearch]  = useState('');
+  const [filter,  setFilter]  = useState<'all'|'missing'|'done'>('all');
+
+  const filtered = products.filter(p => {
+    const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
+    const matchFilter = filter === 'all' ? true : filter === 'missing' ? isPlaceholder(p.images[0]) : !isPlaceholder(p.images[0]);
+    return matchSearch && matchFilter;
+  });
+
+  const upload = useCallback(async (sku: string, file: File) => {
+    setStatus(s => ({ ...s, [sku]: 'uploading' }));
+    try {
+      const b64  = await fileToBase64(file);
+      const resp = await fetch('/api/admin/upload-image', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ secret, sku, imageBase64: b64 }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error);
+      onUpdate(products.map(p =>
+        p.sku === sku ? { ...p, images: [data.imageUrl, ...p.images.filter(i => !i.includes('unsplash'))] } : p
+      ));
+      setStatus(s => ({ ...s, [sku]: 'done' }));
+    } catch {
+      setStatus(s => ({ ...s, [sku]: 'error' }));
+    }
+  }, [secret, products, onUpdate]);
+
+  const onDrop = useCallback((sku: string, e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file?.type.startsWith('image/')) upload(sku, file);
+  }, [upload]);
+
+  const missing = products.filter(p => isPlaceholder(p.images[0])).length;
+
+  return (
+    <div className="space-y-5">
+      {missing > 0 && (
+        <div className="flex items-start gap-3 p-4 rounded-2xl"
+          style={{ background: 'rgba(139,90,26,0.06)', border: '1px solid rgba(139,90,26,0.18)' }}>
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: 'rgba(139,90,26,0.12)' }}>
+            <svg className="w-4 h-4" style={{ color: '#8B5A1A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <div>
+            <p className="text-sm font-semibold" style={{ color: '#3A3A3A' }}>
+              {missing} product{missing !== 1 ? 's' : ''} need images
+            </p>
+            <p className="text-xs mt-0.5 leading-relaxed" style={{ color: '#6B6B6B' }}>
+              Click any product card below and select an image from your computer — it uploads and saves automatically. You can also drag-and-drop an image onto a card.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1">
+          <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+            style={{ color: '#B8A99A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input type="text" value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="Search products…"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm focus:outline-none"
+            style={{ background: 'white', border: '1px solid #EDE7D9', color: '#0C0C0C' }}/>
+        </div>
+        <div className="flex rounded-xl overflow-hidden text-sm"
+          style={{ border: '1px solid #EDE7D9', background: 'white' }}>
+          {([['all','All'],['missing','Need image'],['done','Has image']] as const).map(([v,l]) => (
+            <button key={v} onClick={() => setFilter(v)}
+              className="px-3.5 py-2.5 font-medium transition-colors"
+              style={{
+                background: filter === v ? '#0C0C0C' : 'transparent',
+                color: filter === v ? '#F5F0E8' : '#6B6B6B',
+              }}>
+              {l}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {filtered.map(p => {
+          const st     = status[p.sku];
+          const hasImg = !isPlaceholder(p.images[0]);
+          return (
+            <div key={p.sku}
+              onDragOver={e => e.preventDefault()}
+              onDrop={e => onDrop(p.sku, e)}
+              className="rounded-2xl overflow-hidden group transition-all duration-300 hover:shadow-[0_8px_32px_rgba(0,0,0,0.10)] hover:-translate-y-0.5"
+              style={{ background: 'white', border: '1px solid #EDE7D9' }}>
+              <label className="block relative aspect-square cursor-pointer overflow-hidden"
+                style={{ background: hasImg ? '#F5F0E8' : '#FDFBF8' }}>
+                <input type="file" accept="image/*" className="hidden sr-only"
+                  onChange={e => e.target.files?.[0] && upload(p.sku, e.target.files[0])} />
+                {hasImg ? (
+                  <img src={p.images[0]} alt={p.name}
+                    className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"/>
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                      style={{ background: 'rgba(139,90,26,0.08)', border: '1.5px dashed rgba(139,90,26,0.30)' }}>
+                      <svg className="w-5 h-5" style={{ color: '#8B5A1A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4"/>
+                      </svg>
+                    </div>
+                    <span className="text-[10px] font-semibold tracking-wide text-center px-3 leading-tight"
+                      style={{ color: '#8B5A1A' }}>
+                      Click to upload<br/>or drag here
+                    </span>
+                  </div>
+                )}
+                {hasImg && (
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    style={{ background: 'rgba(12,12,12,0.40)' }}>
+                    <span className="text-white text-[11px] font-bold px-3 py-1.5 rounded-full"
+                      style={{ background: 'rgba(12,12,12,0.55)' }}>
+                      Change image
+                    </span>
+                  </div>
+                )}
+                {st === 'uploading' && (
+                  <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.85)' }}>
+                    <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
+                      style={{ borderColor: '#8B5A1A', borderTopColor: 'transparent' }}/>
+                  </div>
+                )}
+                {st === 'done' && (
+                  <div className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: '#166534' }}>
+                    <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/>
+                    </svg>
+                  </div>
+                )}
+                {st === 'error' && (
+                  <div className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center bg-red-600">
+                    <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                  </div>
+                )}
+                {!hasImg && !st && (
+                  <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-bold"
+                    style={{ background: 'rgba(139,90,26,0.10)', color: '#8B5A1A' }}>
+                    NO IMAGE
+                  </div>
+                )}
+              </label>
+              <div className="p-3">
+                <p className="text-[9px] font-bold tracking-widest uppercase mb-0.5" style={{ color: '#B8A99A' }}>{p.brand}</p>
+                <p className="text-[11.5px] font-medium leading-snug line-clamp-2" style={{ color: '#0C0C0C' }}>{p.name}</p>
+                <p className="text-[10px] font-mono mt-1" style={{ color: '#B8A99A' }}>{p.sku}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {filtered.length === 0 && (
+        <div className="text-center py-16" style={{ color: '#B8A99A' }}>
+          <p className="text-3xl mb-3">🔍</p>
+          <p className="font-medium text-sm">No products match</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function FolderUpload({ products, secret, onDone }: {
   products: Product[];
   secret:   string;
   onDone:   (p: Product[]) => void;
 }) {
-  const [jobs,     setJobs]     = useState<UploadJob[]>([]);
-  const [running,  setRunning]  = useState(false);
-  const [drag,     setDrag]     = useState(false);
-  const folderRef  = useRef<HTMLInputElement>(null);
-  const filesRef   = useRef<HTMLInputElement>(null);
+  const [jobs,    setJobs]    = useState<UploadJob[]>([]);
+  const [running, setRunning] = useState(false);
+  const [drag,    setDrag]    = useState(false);
+  const folderRef = useRef<HTMLInputElement>(null);
+  const filesRef  = useRef<HTMLInputElement>(null);
 
   const buildJobs = useCallback((files: FileList | File[]) => {
     const arr = Array.from(files).filter(f => f.type.startsWith('image/'));
-    const newJobs: UploadJob[] = arr.map(file => {
+    setJobs(arr.map(file => {
       const match = matchFile(file.name, products);
-      return {
-        file,
-        sku:    match?.sku  ?? '',
-        name:   match?.name ?? '(no match)',
-        status: match ? 'pending' : 'no-match',
-      };
-    });
-    setJobs(newJobs);
+      return { file, sku: match?.sku ?? '', name: match?.name ?? '(no match)', status: (match ? 'pending' : 'no-match') as UploadJob['status'] };
+    }));
   }, [products]);
-
-  const onFolderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.length) buildJobs(e.target.files);
-  };
-
-  const onDrop = (e: React.DragEvent) => {
-    e.preventDefault(); setDrag(false);
-    const items = e.dataTransfer.items;
-    const files: File[] = [];
-    for (let i = 0; i < items.length; i++) {
-      const f = items[i].getAsFile();
-      if (f && f.type.startsWith('image/')) files.push(f);
-    }
-    if (files.length) buildJobs(files);
-  };
 
   const runUploads = async () => {
     setRunning(true);
-    const pending = jobs.filter(j => j.status === 'pending');
-    for (const job of pending) {
+    for (const job of jobs.filter(j => j.status === 'pending')) {
       setJobs(prev => prev.map(j => j.file === job.file ? { ...j, status: 'uploading' } : j));
       try {
         const b64 = await fileToBase64(job.file);
         const res = await fetch('/api/admin/upload-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ secret, sku: job.sku, imageBase64: b64 }),
         });
         const data = await res.json();
@@ -244,120 +403,114 @@ function FolderUpload({ products, secret, onDone }: {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold text-gray-900">Folder / Bulk Image Upload</h2>
-        <p className="text-sm text-gray-500 mt-1">
-          Select a folder or multiple images. Files are matched to products by filename → SKU.
-          Rename files to match product SKUs (e.g. <code className="bg-gray-100 px-1 rounded">MIKA-WM-8KG.jpg</code>).
+        <h2 className="text-lg font-bold" style={{ color: '#0C0C0C' }}>Bulk Folder Upload</h2>
+        <p className="text-sm mt-1" style={{ color: '#6B6B6B' }}>
+          Select a folder or multiple images. Files are matched by SKU in the filename —
+          e.g. <code className="px-1.5 py-0.5 rounded text-xs font-mono" style={{ background: '#EDE7D9', color: '#3A3A3A' }}>MIKA-WM-8KG.jpg</code>
         </p>
       </div>
 
-      {/* Drop zone */}
       <div
         onDragOver={e => { e.preventDefault(); setDrag(true); }}
         onDragLeave={() => setDrag(false)}
-        onDrop={onDrop}
-        className={`border-2 border-dashed rounded-2xl p-12 text-center transition-all ${
-          drag ? 'border-[#6D28D9] bg-purple-50' : 'border-gray-300 bg-white hover:border-purple-300'
-        }`}>
+        onDrop={e => {
+          e.preventDefault(); setDrag(false);
+          const files: File[] = [];
+          for (let i = 0; i < e.dataTransfer.items.length; i++) {
+            const f = e.dataTransfer.items[i].getAsFile();
+            if (f?.type.startsWith('image/')) files.push(f);
+          }
+          if (files.length) buildJobs(files);
+        }}
+        className="border-2 border-dashed rounded-2xl p-12 text-center transition-all"
+        style={{ borderColor: drag ? '#8B5A1A' : '#D4C9B8', background: drag ? 'rgba(139,90,26,0.04)' : 'white' }}>
         <div className="text-4xl mb-3">📂</div>
-        <p className="text-gray-700 font-semibold">Drag & drop images here</p>
-        <p className="text-gray-400 text-sm mt-1">or choose how to select:</p>
-        <div className="flex items-center justify-center gap-3 mt-4">
+        <p className="font-semibold" style={{ color: '#0C0C0C' }}>Drag & drop images here</p>
+        <p className="text-sm mt-1" style={{ color: '#B8A99A' }}>or choose:</p>
+        <div className="flex justify-center gap-3 mt-5">
           <button onClick={() => folderRef.current?.click()}
-            className="px-4 py-2 bg-[#6D28D9] text-white text-sm font-semibold rounded-xl hover:bg-[#7C3AED] transition-colors">
-            📁 Select Folder
-          </button>
+            className="px-5 py-2.5 rounded-xl text-sm font-bold"
+            style={{ background: '#0C0C0C', color: '#F5F0E8' }}>📁 Select Folder</button>
           <button onClick={() => filesRef.current?.click()}
-            className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors">
-            🖼 Select Files
-          </button>
+            className="px-5 py-2.5 rounded-xl text-sm font-bold"
+            style={{ background: 'white', border: '1px solid #EDE7D9', color: '#3A3A3A' }}>🖼 Select Files</button>
         </div>
-        {/* Hidden inputs */}
         <input ref={folderRef} type="file" multiple accept="image/*"
           // @ts-ignore
           webkitdirectory="" directory=""
-          onChange={onFolderChange} className="hidden" />
+          onChange={e => e.target.files?.length && buildJobs(e.target.files)} className="hidden" />
         <input ref={filesRef} type="file" multiple accept="image/*"
           onChange={e => e.target.files && buildJobs(e.target.files)} className="hidden" />
       </div>
 
-      {/* Match tip */}
       {products.length > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-          <p className="text-sm text-blue-800 font-semibold mb-2">💡 How filename matching works</p>
-          <div className="grid grid-cols-2 gap-2 text-xs text-blue-700">
+        <div className="rounded-xl p-4" style={{ background: '#FDFBF8', border: '1px solid #EDE7D9' }}>
+          <p className="text-xs font-bold mb-2.5" style={{ color: '#8B5A1A' }}>💡 Rename files to match product SKUs</p>
+          <div className="grid grid-cols-2 gap-2 text-xs">
             {products.slice(0, 4).map(p => (
-              <div key={p.sku} className="bg-white/60 rounded-lg px-3 py-1.5">
-                <span className="font-mono font-bold">{p.sku.toLowerCase().replace(/[^a-z0-9]/g,'-')}.jpg</span>
-                <span className="text-blue-400 mx-1">→</span>
-                <span className="truncate">{p.name.substring(0, 25)}…</span>
+              <div key={p.sku} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                style={{ background: 'white', border: '1px solid #EDE7D9' }}>
+                <span className="font-mono font-bold" style={{ color: '#3A3A3A' }}>
+                  {p.sku.toLowerCase().replace(/[^a-z0-9]/g, '-')}.jpg
+                </span>
+                <span style={{ color: '#D4C9B8' }}>→</span>
+                <span className="truncate" style={{ color: '#6B6B6B' }}>{p.name.substring(0, 20)}…</span>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Job list */}
       {jobs.length > 0 && (
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-            <div className="flex items-center gap-3 text-sm">
-              <span className="text-gray-700 font-semibold">{jobs.length} files</span>
-              {matched   > 0 && <span className="text-green-600">✓ {matched} matched</span>}
-              {unmatched > 0 && <span className="text-orange-500">⚠ {unmatched} unmatched</span>}
-              {done      > 0 && <span className="text-purple-600">↑ {done} uploaded</span>}
-              {errors    > 0 && <span className="text-red-500">✗ {errors} failed</span>}
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid #EDE7D9' }}>
+          <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid #EDE7D9' }}>
+            <div className="flex items-center gap-3 text-xs font-medium">
+              <span style={{ color: '#3A3A3A' }}>{jobs.length} files</span>
+              {matched   > 0 && <span style={{ color: '#166534' }}>✓ {matched} matched</span>}
+              {unmatched > 0 && <span style={{ color: '#8B5A1A' }}>⚠ {unmatched} unmatched</span>}
+              {done      > 0 && <span style={{ color: '#1e40af' }}>↑ {done} uploaded</span>}
+              {errors    > 0 && <span style={{ color: '#dc2626' }}>✗ {errors} failed</span>}
             </div>
             <div className="flex gap-2">
               <button onClick={() => setJobs([])}
-                className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1 transition-colors">
-                Clear
-              </button>
+                className="text-xs px-2 py-1 rounded" style={{ color: '#B8A99A' }}>Clear</button>
               {matched > done && (
                 <button onClick={runUploads} disabled={running}
-                  className="px-4 py-1.5 bg-[#6D28D9] text-white text-sm font-semibold rounded-lg hover:bg-[#7C3AED] disabled:opacity-50 transition-colors">
-                  {running ? 'Uploading…' : `Upload ${matched - done} matched`}
+                  className="px-4 py-1.5 rounded-lg text-sm font-bold disabled:opacity-50"
+                  style={{ background: '#0C0C0C', color: '#F5F0E8' }}>
+                  {running ? 'Uploading…' : `Upload ${matched - done} files`}
                 </button>
               )}
             </div>
           </div>
-
-          <div className="divide-y divide-gray-50 max-h-[480px] overflow-y-auto">
+          <div className="divide-y max-h-[440px] overflow-y-auto" style={{ borderColor: '#F5F0E8' }}>
             {jobs.map((job, i) => (
               <div key={i} className="flex items-center gap-3 px-5 py-3">
-                {/* Thumbnail */}
-                <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 shrink-0">
-                  <img src={URL.createObjectURL(job.file)} alt="" className="w-full h-full object-cover" />
+                <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0" style={{ background: '#F5F0E8' }}>
+                  <img src={URL.createObjectURL(job.file)} alt="" className="w-full h-full object-cover"/>
                 </div>
-
-                {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 truncate">{job.file.name}</p>
-                  <p className="text-xs text-gray-400 truncate">
+                  <p className="text-sm font-medium truncate" style={{ color: '#0C0C0C' }}>{job.file.name}</p>
+                  <p className="text-xs truncate" style={{ color: '#B8A99A' }}>
                     {job.status === 'no-match' ? '⚠ No matching product' : `→ ${job.name} (${job.sku})`}
                   </p>
                 </div>
-
-                {/* Status */}
                 <div className="shrink-0">
-                  {job.status === 'pending'    && <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full">Pending</span>}
-                  {job.status === 'uploading'  && <span className="text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded-full animate-pulse">Uploading…</span>}
-                  {job.status === 'done'       && <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">✓ Done</span>}
-                  {job.status === 'error'      && <span className="text-xs text-red-500 bg-red-50 px-2 py-1 rounded-full" title={job.error}>✗ Failed</span>}
-                  {job.status === 'no-match'   && <span className="text-xs text-orange-500 bg-orange-50 px-2 py-1 rounded-full">No match</span>}
+                  {job.status === 'pending'   && <span className="text-[11px] px-2.5 py-1 rounded-full font-medium" style={{ background: '#F5F0E8', color: '#6B6B6B' }}>Pending</span>}
+                  {job.status === 'uploading' && <span className="text-[11px] px-2.5 py-1 rounded-full font-medium animate-pulse" style={{ background: 'rgba(139,90,26,0.10)', color: '#8B5A1A' }}>Uploading…</span>}
+                  {job.status === 'done'      && <span className="text-[11px] px-2.5 py-1 rounded-full font-medium" style={{ background: 'rgba(22,101,52,0.10)', color: '#166534' }}>✓ Done</span>}
+                  {job.status === 'error'     && <span className="text-[11px] px-2.5 py-1 rounded-full font-medium" style={{ background: 'rgba(220,38,38,0.08)', color: '#dc2626' }} title={job.error}>✗ Failed</span>}
+                  {job.status === 'no-match'  && <span className="text-[11px] px-2.5 py-1 rounded-full font-medium" style={{ background: 'rgba(139,90,26,0.08)', color: '#8B5A1A' }}>No match</span>}
                 </div>
-
-                {/* Override SKU for unmatched */}
                 {job.status === 'no-match' && (
                   <select
                     onChange={e => setJobs(prev => prev.map((j, idx) => idx === i
-                      ? { ...j, sku: e.target.value, name: products.find(p=>p.sku===e.target.value)?.name??'', status: e.target.value ? 'pending' : 'no-match' }
+                      ? { ...j, sku: e.target.value, name: products.find(p => p.sku === e.target.value)?.name ?? '', status: e.target.value ? 'pending' : 'no-match' }
                       : j))}
-                    className="text-xs border border-gray-200 rounded-lg px-2 py-1 text-gray-700 shrink-0 max-w-[160px]">
+                    className="text-xs rounded-lg px-2 py-1.5 shrink-0 max-w-[160px] focus:outline-none"
+                    style={{ border: '1px solid #EDE7D9', color: '#3A3A3A', background: 'white' }}>
                     <option value="">Assign to product…</option>
-                    {products.map(p => (
-                      <option key={p.sku} value={p.sku}>{p.name.substring(0, 30)}</option>
-                    ))}
+                    {products.map(p => <option key={p.sku} value={p.sku}>{p.name.substring(0, 30)}</option>)}
                   </select>
                 )}
               </div>
@@ -369,180 +522,18 @@ function FolderUpload({ products, secret, onDone }: {
   );
 }
 
-/* ════════════════════════════════════════════════════════
-   IMAGE MANAGER TAB
-   ════════════════════════════════════════════════════════ */
-function ImageManager({ products, secret, onUpdate }: {
-  products: Product[];
-  secret:   string;
-  onUpdate: (p: Product[]) => void;
-}) {
-  const [status,  setStatus]  = useState<Record<string,'uploading'|'done'|'error'>>({});
-  const [search,  setSearch]  = useState('');
-  const [filter,  setFilter]  = useState<'all'|'missing'|'done'>('all');
-
-  const filtered = products.filter(p => {
-    const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
-    const matchFilter = filter === 'all' ? true : filter === 'missing' ? isPlaceholder(p.images[0]) : !isPlaceholder(p.images[0]);
-    return matchSearch && matchFilter;
-  });
-
-  const upload = useCallback(async (sku: string, file: File) => {
-    setStatus(s => ({ ...s, [sku]: 'uploading' }));
-    try {
-      const b64 = await fileToBase64(file);
-      const resp = await fetch('/api/admin/upload-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ secret, sku, imageBase64: b64 }),
-      });
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.error);
-      onUpdate(products.map(p =>
-        p.sku === sku ? { ...p, images: [data.imageUrl, ...p.images.filter(i => !i.includes('unsplash'))] } : p
-      ));
-      setStatus(s => ({ ...s, [sku]: 'done' }));
-    } catch {
-      setStatus(s => ({ ...s, [sku]: 'error' }));
-    }
-  }, [secret, products, onUpdate]);
-
-  const onDrop = useCallback((sku: string, e: React.DragEvent) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file?.type.startsWith('image/')) upload(sku, file);
-  }, [upload]);
-
-  return (
-    <div className="space-y-5">
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-          </svg>
-          <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Search products…"
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-purple-400 bg-white"/>
-        </div>
-        <div className="flex rounded-xl border border-gray-200 overflow-hidden bg-white text-sm">
-          {([['all','All'],['missing','Need image'],['done','Has image']] as const).map(([v,l]) => (
-            <button key={v} onClick={() => setFilter(v)}
-              className={`px-3 py-2 font-medium transition-colors ${filter===v ? 'bg-[#6D28D9] text-white' : 'text-gray-500 hover:bg-gray-50'}`}>
-              {l}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {filtered.map(p => {
-          const st    = status[p.sku];
-          const hasImg = !isPlaceholder(p.images[0]);
-          return (
-            <div key={p.sku}
-              onDragOver={e => e.preventDefault()}
-              onDrop={e => onDrop(p.sku, e)}
-              className="bg-white rounded-2xl border border-gray-200 overflow-hidden group hover:shadow-md transition-all">
-              {/* Image area */}
-              <label className="block relative aspect-square bg-gray-50 cursor-pointer overflow-hidden">
-                <input type="file" accept="image/*" className="hidden"
-                  onChange={e => e.target.files?.[0] && upload(p.sku, e.target.files[0])} />
-                {hasImg ? (
-                  <img src={p.images[0]} alt={p.name} className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"/>
-                ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-300">
-                    <svg className="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1}
-                        d="M12 4v16m8-8H4"/>
-                    </svg>
-                    <span className="text-xs font-medium">Click or drag image</span>
-                  </div>
-                )}
-                {/* Overlay on hover */}
-                <div className={`absolute inset-0 flex items-center justify-center transition-opacity ${hasImg ? 'opacity-0 group-hover:opacity-100 bg-black/30' : ''}`}>
-                  {hasImg && (
-                    <span className="text-white text-xs font-semibold bg-black/50 px-3 py-1.5 rounded-full">
-                      Change image
-                    </span>
-                  )}
-                </div>
-                {/* Upload status */}
-                {st === 'uploading' && (
-                  <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                    <div className="w-8 h-8 border-2 border-[#6D28D9] border-t-transparent rounded-full animate-spin"/>
-                  </div>
-                )}
-                {st === 'done' && (
-                  <div className="absolute top-2 right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                    <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/>
-                    </svg>
-                  </div>
-                )}
-                {st === 'error' && (
-                  <div className="absolute top-2 right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
-                    <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                  </div>
-                )}
-                {/* No-image badge */}
-                {!hasImg && !st && (
-                  <div className="absolute top-2 left-2 bg-orange-100 text-orange-600 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-                    NO IMAGE
-                  </div>
-                )}
-              </label>
-              {/* Info */}
-              <div className="p-3">
-                <p className="text-[9px] font-bold tracking-widest uppercase text-gray-400 mb-0.5">{p.brand}</p>
-                <p className="text-xs font-medium text-gray-800 leading-snug line-clamp-2">{p.name}</p>
-                <p className="text-[10px] text-gray-400 mt-1 font-mono">{p.sku}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {filtered.length === 0 && (
-        <div className="text-center py-12 text-gray-400">
-          <p className="text-3xl mb-2">🔍</p>
-          <p className="font-medium">No products match</p>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ════════════════════════════════════════════════════════
-   ADD PRODUCT TAB
-   ════════════════════════════════════════════════════════ */
 function AddProduct({ secret }: { secret: string }) {
   const [form, setForm] = useState({
     name: '', brand: 'Mika', sku: '', category: 'KITCHEN',
-    price: '', comparePrice: '', stock: '10',
-    subcategory: '', description: '',
+    price: '', comparePrice: '', stock: '10', subcategory: '', description: '',
   });
-  const [imageFile, setImageFile]   = useState<File | null>(null);
-  const [imagePreview, setPreview]  = useState('');
-  const [saving,  setSaving]        = useState(false);
-  const [success, setSuccess]       = useState('');
-  const [error,   setError]         = useState('');
+  const [imageFile, setImageFile]  = useState<File | null>(null);
+  const [imagePreview, setPreview] = useState('');
+  const [saving,  setSaving]       = useState(false);
+  const [success, setSuccess]      = useState('');
+  const [error,   setError]        = useState('');
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
-
-  const onImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    setImageFile(f);
-    setPreview(URL.createObjectURL(f));
-  };
-
-  const onDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const f = e.dataTransfer.files[0];
-    if (f?.type.startsWith('image/')) { setImageFile(f); setPreview(URL.createObjectURL(f)); }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -551,119 +542,86 @@ function AddProduct({ secret }: { secret: string }) {
       let imageBase64 = '';
       if (imageFile) imageBase64 = await fileToBase64(imageFile);
       const res = await fetch('/api/admin/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          secret,
-          name:         form.name,
-          brand:        form.brand,
-          sku:          form.sku || undefined,
-          category:     form.category,
-          price:        parseFloat(form.price),
-          comparePrice: form.comparePrice ? parseFloat(form.comparePrice) : undefined,
-          stock:        parseInt(form.stock) || 10,
-          subcategory:  form.subcategory || undefined,
-          description:  form.description || undefined,
-          imageBase64:  imageBase64 || undefined,
-        }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret, ...form, price: parseFloat(form.price), comparePrice: form.comparePrice ? parseFloat(form.comparePrice) : undefined, stock: parseInt(form.stock)||10, sku: form.sku||undefined, subcategory: form.subcategory||undefined, description: form.description||undefined, imageBase64: imageBase64||undefined }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to add');
-      setSuccess(`✓ Product "${data.product?.name ?? form.name}" added successfully!`);
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      setSuccess(`✓ "${data.product?.name ?? form.name}" added successfully`);
       setForm({ name:'',brand:'Mika',sku:'',category:'KITCHEN',price:'',comparePrice:'',stock:'10',subcategory:'',description:'' });
       setImageFile(null); setPreview('');
-    } catch (err: any) {
-      setError(err.message);
-    }
+    } catch (err: any) { setError(err.message); }
     setSaving(false);
   };
 
+  const inp = "w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none";
+  const inpStyle = { background: 'white', border: '1px solid #EDE7D9', color: '#0C0C0C' };
+
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
-      <h2 className="text-lg font-bold text-gray-900">Add New Product</h2>
+      <h2 className="text-lg font-bold" style={{ color: '#0C0C0C' }}>Add New Product</h2>
+      {success && <div className="px-4 py-3 rounded-xl text-sm font-medium" style={{ background: 'rgba(22,101,52,0.08)', border: '1px solid rgba(22,101,52,0.20)', color: '#166534' }}>{success}</div>}
+      {error   && <div className="px-4 py-3 rounded-xl text-sm" style={{ background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.15)', color: '#dc2626' }}>{error}</div>}
 
-      {success && <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm">{success}</div>}
-      {error   && <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">{error}</div>}
-
-      {/* Image upload */}
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">Product Image</label>
+        <label className="block text-sm font-semibold mb-2" style={{ color: '#0C0C0C' }}>Product Image</label>
         <label
-          onDragOver={e => e.preventDefault()} onDrop={onDrop}
-          className="block border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center cursor-pointer hover:border-purple-400 transition-colors">
-          <input type="file" accept="image/*" onChange={onImage} className="hidden" />
-          {imagePreview ? (
-            <img src={imagePreview} alt="Preview" className="w-32 h-32 object-contain mx-auto rounded-xl"/>
-          ) : (
-            <div className="text-gray-400">
-              <div className="text-3xl mb-2">🖼</div>
-              <p className="text-sm">Click or drag image here</p>
-            </div>
-          )}
+          onDragOver={e => e.preventDefault()}
+          onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f?.type.startsWith('image/')) { setImageFile(f); setPreview(URL.createObjectURL(f)); } }}
+          className="block border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer"
+          style={{ borderColor: '#D4C9B8', background: '#FDFBF8' }}>
+          <input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (!f) return; setImageFile(f); setPreview(URL.createObjectURL(f)); }} className="hidden" />
+          {imagePreview
+            ? <img src={imagePreview} alt="Preview" className="w-32 h-32 object-contain mx-auto rounded-xl"/>
+            : <div style={{ color: '#B8A99A' }}><div className="text-3xl mb-2">🖼</div><p className="text-sm">Click or drag image here</p></div>}
         </label>
       </div>
 
-      {/* Two columns */}
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2">
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Product Name *</label>
-          <input required value={form.name} onChange={e => set('name', e.target.value)}
-            placeholder="MIKA 8kg Front Load Inverter Washing Machine"
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-purple-400"/>
+          <label className="block text-sm font-semibold mb-1.5" style={{ color: '#0C0C0C' }}>Product Name *</label>
+          <input required value={form.name} onChange={e => set('name', e.target.value)} placeholder="MIKA 8kg Front Load Inverter Washing Machine" className={inp} style={inpStyle}/>
         </div>
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Brand *</label>
-          <select required value={form.brand} onChange={e => set('brand', e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-purple-400 bg-white">
-            {BRANDS.map(b => <option key={b} value={b}>{b}</option>)}
+          <label className="block text-sm font-semibold mb-1.5" style={{ color: '#0C0C0C' }}>Brand *</label>
+          <select required value={form.brand} onChange={e => set('brand', e.target.value)} className={inp} style={inpStyle}>
+            {BRANDS.map(b => <option key={b}>{b}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">SKU</label>
-          <input value={form.sku} onChange={e => set('sku', e.target.value)}
-            placeholder="MIKA-WM-8KG (auto-generated if blank)"
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-purple-400"/>
+          <label className="block text-sm font-semibold mb-1.5" style={{ color: '#0C0C0C' }}>SKU</label>
+          <input value={form.sku} onChange={e => set('sku', e.target.value)} placeholder="Auto-generated if blank" className={inp} style={inpStyle}/>
         </div>
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Category *</label>
-          <select required value={form.category} onChange={e => set('category', e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-purple-400 bg-white">
+          <label className="block text-sm font-semibold mb-1.5" style={{ color: '#0C0C0C' }}>Category *</label>
+          <select required value={form.category} onChange={e => set('category', e.target.value)} className={inp} style={inpStyle}>
             {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Subcategory</label>
-          <input value={form.subcategory} onChange={e => set('subcategory', e.target.value)}
-            placeholder="washing-machines"
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-purple-400"/>
+          <label className="block text-sm font-semibold mb-1.5" style={{ color: '#0C0C0C' }}>Subcategory</label>
+          <input value={form.subcategory} onChange={e => set('subcategory', e.target.value)} placeholder="washing-machines" className={inp} style={inpStyle}/>
         </div>
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Price (KES) *</label>
-          <input required type="number" value={form.price} onChange={e => set('price', e.target.value)}
-            placeholder="45000"
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-purple-400"/>
+          <label className="block text-sm font-semibold mb-1.5" style={{ color: '#0C0C0C' }}>Price (KES) *</label>
+          <input required type="number" value={form.price} onChange={e => set('price', e.target.value)} placeholder="45000" className={inp} style={inpStyle}/>
         </div>
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Compare Price (KES)</label>
-          <input type="number" value={form.comparePrice} onChange={e => set('comparePrice', e.target.value)}
-            placeholder="55000 (original/crossed-out price)"
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-purple-400"/>
+          <label className="block text-sm font-semibold mb-1.5" style={{ color: '#0C0C0C' }}>Compare Price (KES)</label>
+          <input type="number" value={form.comparePrice} onChange={e => set('comparePrice', e.target.value)} placeholder="55000 (crossed-out)" className={inp} style={inpStyle}/>
         </div>
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Stock</label>
-          <input type="number" value={form.stock} onChange={e => set('stock', e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-purple-400"/>
+          <label className="block text-sm font-semibold mb-1.5" style={{ color: '#0C0C0C' }}>Stock</label>
+          <input type="number" value={form.stock} onChange={e => set('stock', e.target.value)} className={inp} style={inpStyle}/>
         </div>
         <div className="col-span-2">
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Description</label>
-          <textarea value={form.description} onChange={e => set('description', e.target.value)}
-            rows={3} placeholder="Optional product description…"
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-purple-400 resize-none"/>
+          <label className="block text-sm font-semibold mb-1.5" style={{ color: '#0C0C0C' }}>Description</label>
+          <textarea value={form.description} onChange={e => set('description', e.target.value)} rows={3} placeholder="Optional…" className={`${inp} resize-none`} style={inpStyle}/>
         </div>
       </div>
-
       <button type="submit" disabled={saving || !form.name || !form.price}
-        className="w-full py-3.5 bg-[#6D28D9] text-white font-bold rounded-xl hover:bg-[#7C3AED] disabled:opacity-50 transition-all">
+        className="w-full py-3.5 rounded-xl font-bold text-sm disabled:opacity-40"
+        style={{ background: '#0C0C0C', color: '#F5F0E8' }}>
         {saving ? 'Saving…' : 'Add Product'}
       </button>
     </form>
