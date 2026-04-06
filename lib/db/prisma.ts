@@ -7,11 +7,20 @@ declare global {
 
 function makePrismaClient(): PrismaClient {
   if (!process.env.DATABASE_URL) {
-    console.error('[Smartech] DATABASE_URL is not set — add it to Vercel environment variables.');
+    console.error('[Smartech] ⚠  DATABASE_URL is not set — add it to your .env file');
   }
   try {
     return new PrismaClient({
       log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL
+            ? process.env.DATABASE_URL.includes('connectTimeoutMS')
+              ? process.env.DATABASE_URL
+              : process.env.DATABASE_URL + (process.env.DATABASE_URL.includes('?') ? '&' : '?') + 'connectTimeoutMS=5000&socketTimeoutMS=5000'
+            : undefined,
+        },
+      },
     });
   } catch (e) {
     console.error('[Smartech] PrismaClient init failed:', e);

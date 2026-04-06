@@ -42,12 +42,12 @@ function isPlaceholder(img: string) {
 }
 
 function matchFile(filename: string, products: Product[]): Product | null {
-  const base = filename.toLowerCase().replace(/\.[^.]+$/, '').replace(/[^a-z0-9]/g, '-');
-  const bySku = products.find(p => p.sku.toLowerCase().replace(/[^a-z0-9]/g, '-') === base);
+  const base    = filename.toLowerCase().replace(/\.[^.]+$/, '').replace(/[^a-z0-9]/g, '-');
+  const bySku   = products.find(p => p.sku.toLowerCase().replace(/[^a-z0-9]/g, '-') === base);
   if (bySku) return bySku;
-  const skuPartial = products.find(p => base.includes(p.sku.toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 6)));
-  if (skuPartial) return skuPartial;
-  const byName = products.find(p => {
+  const partial = products.find(p => base.includes(p.sku.toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 6)));
+  if (partial) return partial;
+  const byName  = products.find(p => {
     const slug = p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 30);
     return base.includes(slug.substring(0, 15)) || slug.includes(base.substring(0, 15));
   });
@@ -63,26 +63,42 @@ async function fileToBase64(file: File): Promise<string> {
   });
 }
 
+/* ══════════════════════════════════════════════════════════
+   ROOT PAGE
+══════════════════════════════════════════════════════════ */
 export default function AdminPage() {
   const [secret,   setSecret]   = useState('');
   const [authed,   setAuthed]   = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
+  const [dbError,  setDbError]  = useState('');
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
-  const [tab,      setTab]      = useState<'images'|'folder'|'add'>('images');
+  const [tab,      setTab]      = useState<'images'|'folder'|'direct'|'add'>('direct');
 
+  /* Login: auth via DB-free endpoint, then try to load products */
   const login = async () => {
     setLoading(true); setError('');
     try {
-      const res = await fetch(`/api/admin/upload-image?secret=${encodeURIComponent(secret)}`);
-      if (!res.ok) { setError('Wrong password.'); setLoading(false); return; }
-      const { products: p } = await res.json();
-      setProducts(p);
+      /* Step 1 — verify secret (no MongoDB) */
+      const authRes = await fetch(`/api/admin/cloudinary-upload?secret=${encodeURIComponent(secret)}`);
+      if (!authRes.ok) { setError('Wrong password.'); setLoading(false); return; }
+
+      /* Step 2 — try to load products (may fail if Atlas is blocked) */
+      try {
+        const pRes = await fetch(`/api/admin/upload-image?secret=${encodeURIComponent(secret)}`);
+        const pData = await pRes.json();
+        if (pData.products) setProducts(pData.products);
+        if (pData.dbError)  setDbError(pData.dbError);
+      } catch {
+        setDbError('Could not reach database — image upload still works via Direct Upload.');
+      }
+
       setAuthed(true);
     } catch { setError('Connection error.'); }
     setLoading(false);
   };
 
+  /* ── Login screen ── */
   if (!authed) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#0C0C0C' }}>
@@ -113,8 +129,8 @@ export default function AdminPage() {
           </div>
           <div className="mt-8 p-4 rounded-xl text-xs leading-relaxed"
             style={{ background: 'rgba(245,240,232,0.04)', border: '1px solid rgba(245,240,232,0.08)', color: 'rgba(245,240,232,0.40)' }}>
-            <p className="font-semibold mb-1.5" style={{ color: 'rgba(245,240,232,0.60)' }}>How to upload product images</p>
-            <p>Sign in → <strong style={{ color: 'rgba(245,240,232,0.55)' }}>Image Manager</strong> → click any product card → select image from your computer. Saves automatically to Cloudinary.</p>
+            <p className="font-semibold mb-1.5" style={{ color: 'rgba(245,240,232,0.60)' }}>Quick upload</p>
+            <p>Sign in → <strong style={{ color: 'rgba(245,240,232,0.55)' }}>Direct Upload</strong> → pick file → get Cloudinary URL instantly. Works even when database is offline.</p>
           </div>
         </div>
       </div>
@@ -126,6 +142,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen" style={{ background: '#F5F0E8' }}>
+      {/* Header */}
       <div className="sticky top-0 z-30" style={{ background: '#0C0C0C', borderBottom: '1px solid rgba(245,240,232,0.08)' }}>
         <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -136,10 +153,12 @@ export default function AdminPage() {
               </svg>
             </div>
             <span className="text-white font-semibold text-sm">Admin Panel</span>
-            <span className="hidden sm:block text-xs px-2.5 py-0.5 rounded-full font-medium"
-              style={{ background: 'rgba(139,90,26,0.20)', color: '#D9A050' }}>
-              {products.length} products · {hasImage} with images · {noImage} need images
-            </span>
+            {products.length > 0 && (
+              <span className="hidden sm:block text-xs px-2.5 py-0.5 rounded-full font-medium"
+                style={{ background: 'rgba(139,90,26,0.20)', color: '#D9A050' }}>
+                {products.length} products · {hasImage} with images · {noImage} need images
+              </span>
+            )}
           </div>
           <button onClick={() => setAuthed(false)}
             className="text-xs px-3 py-1.5 rounded-lg"
@@ -149,10 +168,21 @@ export default function AdminPage() {
         </div>
       </div>
 
+      {/* DB warning banner */}
+      {dbError && (
+        <div className="bg-amber-50 border-b border-amber-200 px-6 py-2.5">
+          <p className="text-xs text-amber-800 text-center max-w-5xl mx-auto">
+            ⚠ <strong>Database offline (Atlas IP whitelist).</strong> {dbError}
+          </p>
+        </div>
+      )}
+
+      {/* Tabs */}
       <div style={{ background: 'white', borderBottom: '1px solid #EDE7D9' }}>
         <div className="max-w-5xl mx-auto px-6 flex">
           {([
-            { id: 'images', icon: '🖼', label: 'Image Manager' },
+            { id: 'direct', icon: '⚡', label: 'Direct Upload'  },
+            { id: 'images', icon: '🖼', label: 'Image Manager'  },
             { id: 'folder', icon: '📁', label: 'Folder Upload'  },
             { id: 'add',    icon: '＋', label: 'Add Product'    },
           ] as const).map(t => (
@@ -160,7 +190,7 @@ export default function AdminPage() {
               className="px-5 py-4 text-sm font-semibold border-b-2 transition-all flex items-center gap-2"
               style={{
                 borderColor: tab === t.id ? '#8B5A1A' : 'transparent',
-                color: tab === t.id ? '#8B5A1A' : '#6B6B6B',
+                color:       tab === t.id ? '#8B5A1A' : '#6B6B6B',
               }}>
               <span className="text-base leading-none">{t.icon}</span>
               {t.label}
@@ -170,6 +200,7 @@ export default function AdminPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-8">
+        {tab === 'direct' && <DirectUpload secret={secret} />}
         {tab === 'images' && <ImageManager products={products} secret={secret} onUpdate={p => setProducts(p)} />}
         {tab === 'folder' && <FolderUpload products={products} secret={secret} onDone={p => setProducts(p)} />}
         {tab === 'add'    && <AddProduct   secret={secret} />}
@@ -178,14 +209,133 @@ export default function AdminPage() {
   );
 }
 
+/* ══════════════════════════════════════════════════════════
+   DIRECT UPLOAD — no MongoDB, just Cloudinary → URL
+══════════════════════════════════════════════════════════ */
+interface DirectResult { url: string; publicId: string; copied: boolean; }
+
+function DirectUpload({ secret }: { secret: string }) {
+  const [results,    setResults]    = useState<DirectResult[]>([]);
+  const [uploading,  setUploading]  = useState(false);
+  const [drag,       setDrag]       = useState(false);
+  const [publicId,   setPublicId]   = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const upload = async (files: File[]) => {
+    const imgs = files.filter(f => f.type.startsWith('image/'));
+    if (!imgs.length) return;
+    setUploading(true);
+    for (const file of imgs) {
+      try {
+        const b64 = await fileToBase64(file);
+        const id  = publicId.trim() || file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
+        const res = await fetch('/api/admin/cloudinary-upload', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ secret, imageBase64: b64, publicId: id }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        setResults(prev => [{ url: data.url, publicId: data.publicId, copied: false }, ...prev]);
+        setPublicId(''); // reset for next file
+      } catch (err: any) {
+        alert(`Upload failed: ${err.message}`);
+      }
+    }
+    setUploading(false);
+  };
+
+  const copy = async (url: string, i: number) => {
+    await navigator.clipboard.writeText(url);
+    setResults(prev => prev.map((r, idx) => idx === i ? { ...r, copied: true } : r));
+    setTimeout(() => setResults(prev => prev.map((r, idx) => idx === i ? { ...r, copied: false } : r)), 2000);
+  };
+
+  return (
+    <div className="max-w-2xl space-y-6">
+      <div>
+        <h2 className="text-lg font-bold" style={{ color: '#0C0C0C' }}>Direct Cloudinary Upload</h2>
+        <p className="text-sm mt-1" style={{ color: '#6B6B6B' }}>
+          Upload any image straight to Cloudinary and get the URL. Works even when the database is offline.
+          Paste the URL into your product record manually if needed.
+        </p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold mb-1.5" style={{ color: '#0C0C0C' }}>
+          Public ID <span className="font-normal text-xs" style={{ color: '#B8A99A' }}>(optional — used as filename in Cloudinary)</span>
+        </label>
+        <input value={publicId} onChange={e => setPublicId(e.target.value)}
+          placeholder="e.g. MIKA-WM-8KG  (auto-set from filename if blank)"
+          className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none"
+          style={{ background: 'white', border: '1px solid #EDE7D9', color: '#0C0C0C' }}/>
+      </div>
+
+      {/* Drop zone */}
+      <div
+        onDragOver={e => { e.preventDefault(); setDrag(true); }}
+        onDragLeave={() => setDrag(false)}
+        onDrop={e => { e.preventDefault(); setDrag(false); upload(Array.from(e.dataTransfer.files)); }}
+        onClick={() => inputRef.current?.click()}
+        className="border-2 border-dashed rounded-2xl p-14 text-center cursor-pointer transition-all"
+        style={{ borderColor: drag ? '#8B5A1A' : '#D4C9B8', background: drag ? 'rgba(139,90,26,0.04)' : 'white' }}>
+        <input ref={inputRef} type="file" multiple accept="image/*" className="hidden"
+          onChange={e => e.target.files && upload(Array.from(e.target.files))}/>
+        {uploading
+          ? <div className="flex flex-col items-center gap-3">
+              <div className="w-10 h-10 border-2 border-t-transparent rounded-full animate-spin"
+                style={{ borderColor: '#8B5A1A', borderTopColor: 'transparent' }}/>
+              <p className="text-sm font-medium" style={{ color: '#8B5A1A' }}>Uploading to Cloudinary…</p>
+            </div>
+          : <>
+              <div className="text-4xl mb-3">☁️</div>
+              <p className="font-semibold" style={{ color: '#0C0C0C' }}>Click or drag images here</p>
+              <p className="text-sm mt-1" style={{ color: '#B8A99A' }}>Uploads directly to Cloudinary — no database needed</p>
+            </>
+        }
+      </div>
+
+      {/* Results */}
+      {results.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-sm font-semibold" style={{ color: '#0C0C0C' }}>{results.length} uploaded</p>
+          {results.map((r, i) => (
+            <div key={i} className="rounded-2xl overflow-hidden flex"
+              style={{ background: 'white', border: '1px solid #EDE7D9' }}>
+              <img src={r.url} alt="" className="w-20 h-20 object-cover shrink-0"/>
+              <div className="flex-1 px-4 py-3 min-w-0">
+                <p className="text-[10px] font-bold tracking-wider uppercase mb-1" style={{ color: '#B8A99A' }}>
+                  smartech-products/{r.publicId}
+                </p>
+                <p className="text-xs font-mono truncate mb-2" style={{ color: '#3A3A3A' }}>{r.url}</p>
+                <button onClick={() => copy(r.url, i)}
+                  className="text-xs px-3 py-1 rounded-lg font-bold transition-colors"
+                  style={{
+                    background: r.copied ? 'rgba(22,101,52,0.10)' : '#0C0C0C',
+                    color:      r.copied ? '#166534' : '#F5F0E8',
+                  }}>
+                  {r.copied ? '✓ Copied!' : 'Copy URL'}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   IMAGE MANAGER
+══════════════════════════════════════════════════════════ */
 function ImageManager({ products, secret, onUpdate }: {
   products: Product[];
   secret:   string;
   onUpdate: (p: Product[]) => void;
 }) {
-  const [status,  setStatus]  = useState<Record<string,'uploading'|'done'|'error'>>({});
-  const [search,  setSearch]  = useState('');
-  const [filter,  setFilter]  = useState<'all'|'missing'|'done'>('all');
+  const [status, setStatus] = useState<Record<string, 'uploading'|'done'|'error'>>({});
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<'all'|'missing'|'done'>('all');
 
   const filtered = products.filter(p => {
     const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
@@ -198,9 +348,8 @@ function ImageManager({ products, secret, onUpdate }: {
     try {
       const b64  = await fileToBase64(file);
       const resp = await fetch('/api/admin/upload-image', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ secret, sku, imageBase64: b64 }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body:   JSON.stringify({ secret, sku, imageBase64: b64 }),
       });
       const data = await resp.json();
       if (!resp.ok) throw new Error(data.error);
@@ -218,6 +367,16 @@ function ImageManager({ products, secret, onUpdate }: {
     const file = e.dataTransfer.files[0];
     if (file?.type.startsWith('image/')) upload(sku, file);
   }, [upload]);
+
+  if (products.length === 0) {
+    return (
+      <div className="text-center py-20" style={{ color: '#B8A99A' }}>
+        <p className="text-4xl mb-4">📭</p>
+        <p className="font-semibold text-sm">No products loaded</p>
+        <p className="text-xs mt-2">Database may be offline. Use <strong>Direct Upload</strong> to upload images to Cloudinary and copy the URLs.</p>
+      </div>
+    );
+  }
 
   const missing = products.filter(p => isPlaceholder(p.images[0])).length;
 
@@ -237,7 +396,7 @@ function ImageManager({ products, secret, onUpdate }: {
               {missing} product{missing !== 1 ? 's' : ''} need images
             </p>
             <p className="text-xs mt-0.5 leading-relaxed" style={{ color: '#6B6B6B' }}>
-              Click any product card below and select an image from your computer — it uploads and saves automatically. You can also drag-and-drop an image onto a card.
+              Click any card or drag an image onto it — uploads to Cloudinary and saves automatically.
             </p>
           </div>
         </div>
@@ -254,15 +413,11 @@ function ImageManager({ products, secret, onUpdate }: {
             className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm focus:outline-none"
             style={{ background: 'white', border: '1px solid #EDE7D9', color: '#0C0C0C' }}/>
         </div>
-        <div className="flex rounded-xl overflow-hidden text-sm"
-          style={{ border: '1px solid #EDE7D9', background: 'white' }}>
+        <div className="flex rounded-xl overflow-hidden text-sm" style={{ border: '1px solid #EDE7D9', background: 'white' }}>
           {([['all','All'],['missing','Need image'],['done','Has image']] as const).map(([v,l]) => (
             <button key={v} onClick={() => setFilter(v)}
               className="px-3.5 py-2.5 font-medium transition-colors"
-              style={{
-                background: filter === v ? '#0C0C0C' : 'transparent',
-                color: filter === v ? '#F5F0E8' : '#6B6B6B',
-              }}>
+              style={{ background: filter === v ? '#0C0C0C' : 'transparent', color: filter === v ? '#F5F0E8' : '#6B6B6B' }}>
               {l}
             </button>
           ))}
@@ -294,8 +449,7 @@ function ImageManager({ products, secret, onUpdate }: {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4"/>
                       </svg>
                     </div>
-                    <span className="text-[10px] font-semibold tracking-wide text-center px-3 leading-tight"
-                      style={{ color: '#8B5A1A' }}>
+                    <span className="text-[10px] font-semibold tracking-wide text-center px-3 leading-tight" style={{ color: '#8B5A1A' }}>
                       Click to upload<br/>or drag here
                     </span>
                   </div>
@@ -304,9 +458,7 @@ function ImageManager({ products, secret, onUpdate }: {
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                     style={{ background: 'rgba(12,12,12,0.40)' }}>
                     <span className="text-white text-[11px] font-bold px-3 py-1.5 rounded-full"
-                      style={{ background: 'rgba(12,12,12,0.55)' }}>
-                      Change image
-                    </span>
+                      style={{ background: 'rgba(12,12,12,0.55)' }}>Change image</span>
                   </div>
                 )}
                 {st === 'uploading' && (
@@ -327,12 +479,6 @@ function ImageManager({ products, secret, onUpdate }: {
                     <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/>
                     </svg>
-                  </div>
-                )}
-                {!hasImg && !st && (
-                  <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-bold"
-                    style={{ background: 'rgba(139,90,26,0.10)', color: '#8B5A1A' }}>
-                    NO IMAGE
                   </div>
                 )}
               </label>
@@ -356,6 +502,9 @@ function ImageManager({ products, secret, onUpdate }: {
   );
 }
 
+/* ══════════════════════════════════════════════════════════
+   FOLDER UPLOAD
+══════════════════════════════════════════════════════════ */
 function FolderUpload({ products, secret, onDone }: {
   products: Product[];
   secret:   string;
@@ -383,7 +532,7 @@ function FolderUpload({ products, secret, onDone }: {
         const b64 = await fileToBase64(job.file);
         const res = await fetch('/api/admin/upload-image', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ secret, sku: job.sku, imageBase64: b64 }),
+          body:   JSON.stringify({ secret, sku: job.sku, imageBase64: b64 }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Upload failed');
@@ -442,24 +591,6 @@ function FolderUpload({ products, secret, onDone }: {
         <input ref={filesRef} type="file" multiple accept="image/*"
           onChange={e => e.target.files && buildJobs(e.target.files)} className="hidden" />
       </div>
-
-      {products.length > 0 && (
-        <div className="rounded-xl p-4" style={{ background: '#FDFBF8', border: '1px solid #EDE7D9' }}>
-          <p className="text-xs font-bold mb-2.5" style={{ color: '#8B5A1A' }}>💡 Rename files to match product SKUs</p>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            {products.slice(0, 4).map(p => (
-              <div key={p.sku} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
-                style={{ background: 'white', border: '1px solid #EDE7D9' }}>
-                <span className="font-mono font-bold" style={{ color: '#3A3A3A' }}>
-                  {p.sku.toLowerCase().replace(/[^a-z0-9]/g, '-')}.jpg
-                </span>
-                <span style={{ color: '#D4C9B8' }}>→</span>
-                <span className="truncate" style={{ color: '#6B6B6B' }}>{p.name.substring(0, 20)}…</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {jobs.length > 0 && (
         <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid #EDE7D9' }}>
@@ -522,6 +653,9 @@ function FolderUpload({ products, secret, onDone }: {
   );
 }
 
+/* ══════════════════════════════════════════════════════════
+   ADD PRODUCT
+══════════════════════════════════════════════════════════ */
 function AddProduct({ secret }: { secret: string }) {
   const [form, setForm] = useState({
     name: '', brand: 'Mika', sku: '', category: 'KITCHEN',
@@ -543,18 +677,27 @@ function AddProduct({ secret }: { secret: string }) {
       if (imageFile) imageBase64 = await fileToBase64(imageFile);
       const res = await fetch('/api/admin/products', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ secret, ...form, price: parseFloat(form.price), comparePrice: form.comparePrice ? parseFloat(form.comparePrice) : undefined, stock: parseInt(form.stock)||10, sku: form.sku||undefined, subcategory: form.subcategory||undefined, description: form.description||undefined, imageBase64: imageBase64||undefined }),
+        body: JSON.stringify({
+          secret, ...form,
+          price:        parseFloat(form.price),
+          comparePrice: form.comparePrice ? parseFloat(form.comparePrice) : undefined,
+          stock:        parseInt(form.stock) || 10,
+          sku:          form.sku || undefined,
+          subcategory:  form.subcategory || undefined,
+          description:  form.description || undefined,
+          imageBase64:  imageBase64 || undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed');
       setSuccess(`✓ "${data.product?.name ?? form.name}" added successfully`);
-      setForm({ name:'',brand:'Mika',sku:'',category:'KITCHEN',price:'',comparePrice:'',stock:'10',subcategory:'',description:'' });
+      setForm({ name:'', brand:'Mika', sku:'', category:'KITCHEN', price:'', comparePrice:'', stock:'10', subcategory:'', description:'' });
       setImageFile(null); setPreview('');
     } catch (err: any) { setError(err.message); }
     setSaving(false);
   };
 
-  const inp = "w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none";
+  const inp      = "w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none";
   const inpStyle = { background: 'white', border: '1px solid #EDE7D9', color: '#0C0C0C' };
 
   return (

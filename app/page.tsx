@@ -5,7 +5,7 @@ import { ProductCard } from '@/components/features/products/ProductCard';
 import { HERO_IMAGES } from '@/constants/heroImages';
 import type { Metadata } from 'next';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300; // Cache homepage for 5 minutes
 
 export const metadata: Metadata = {
   title:       'Smartech Kenya — Premium Tech & Home Appliances Nairobi',
