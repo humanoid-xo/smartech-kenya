@@ -1,51 +1,41 @@
+import { listProducts }  from '@/lib/cloudinary';
 import { ProductCard }    from './ProductCard';
-import { STATIC_PRODUCTS } from '@/constants/staticProducts';
 import Link               from 'next/link';
 
 interface SearchParams { [key: string]: string | undefined }
 
 const TECH_ENUMS = ['SMARTPHONES','LAPTOPS','AUDIO_TV','SMART_HOME','ELECTRICAL','BEDROOM'];
 
-function getProducts(sp: SearchParams) {
-  const category    = sp.category;
-  const subcategory = sp.subcategory;
-  const minPrice    = sp.minPrice  ? parseFloat(sp.minPrice)  : undefined;
-  const maxPrice    = sp.maxPrice  ? parseFloat(sp.maxPrice)  : undefined;
-  const brand       = sp.brand;
-  const search      = sp.search;
-  const page        = parseInt(sp.page ?? '1');
+export async function ProductList({ searchParams }: { searchParams: SearchParams }) {
+  const category    = searchParams.category;
+  const brand       = searchParams.brand;
+  const search      = searchParams.search;
+  const minPrice    = searchParams.minPrice ? parseFloat(searchParams.minPrice) : undefined;
+  const maxPrice    = searchParams.maxPrice ? parseFloat(searchParams.maxPrice) : undefined;
+  const page        = parseInt(searchParams.page ?? '1');
   const limit       = 12;
 
-  let filtered = [...STATIC_PRODUCTS];
+  // ── Fetch live products from Cloudinary ───────────────────────────────────
+  // TECH is a virtual category grouping several enums; expand it for the query.
+  let allProducts = await listProducts({ brand, search });
 
+  // Category filtering (client-side after fetch, since listProducts may not
+  // support the TECH virtual category or multi-enum filtering natively).
   if (category === 'TECH') {
-    filtered = filtered.filter(p => TECH_ENUMS.includes(p.category));
+    allProducts = allProducts.filter((p: any) => TECH_ENUMS.includes(p.category));
   } else if (category) {
-    filtered = filtered.filter(p => p.category === category);
+    allProducts = allProducts.filter((p: any) => p.category === category);
   }
 
-  if (subcategory) filtered = filtered.filter(p => p.subcategory === subcategory);
-  if (brand)       filtered = filtered.filter(p => p.brand.toLowerCase() === brand.toLowerCase());
+  if (searchParams.subcategory)
+    allProducts = allProducts.filter((p: any) => p.subcategory === searchParams.subcategory);
 
-  if (search) {
-    const q = search.toLowerCase();
-    filtered = filtered.filter(p =>
-      p.name.toLowerCase().includes(q) ||
-      p.brand.toLowerCase().includes(q) ||
-      (p.description ?? '').toLowerCase().includes(q)
-    );
-  }
+  if (minPrice !== undefined) allProducts = allProducts.filter((p: any) => p.price >= minPrice);
+  if (maxPrice !== undefined) allProducts = allProducts.filter((p: any) => p.price <= maxPrice);
 
-  if (minPrice !== undefined) filtered = filtered.filter(p => p.price >= minPrice);
-  if (maxPrice !== undefined) filtered = filtered.filter(p => p.price <= maxPrice);
-
-  const total  = filtered.length;
-  const sliced = filtered.slice((page - 1) * limit, page * limit);
-  return { products: sliced as any[], total, pages: Math.ceil(total / limit), page };
-}
-
-export async function ProductList({ searchParams }: { searchParams: SearchParams }) {
-  const { products, total, pages, page } = getProducts(searchParams);
+  const total    = allProducts.length;
+  const pages    = Math.ceil(total / limit);
+  const products = allProducts.slice((page - 1) * limit, page * limit);
 
   if (products.length === 0) {
     return (
@@ -77,7 +67,7 @@ export async function ProductList({ searchParams }: { searchParams: SearchParams
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-        {products.map(p => <ProductCard key={p.id} product={p as any}/>)}
+        {products.map((p: any) => <ProductCard key={p.id} product={p}/>)}
       </div>
 
       {pages > 1 && (
@@ -88,14 +78,14 @@ export async function ProductList({ searchParams }: { searchParams: SearchParams
               &#8592;
             </Link>
           )}
-          {Array.from({ length: pages }, (_, i) => i + 1).map(p => (
-            <Link key={p} href={buildPageUrl(p)}
+          {Array.from({ length: pages }, (_, i) => i + 1).map(n => (
+            <Link key={n} href={buildPageUrl(n)}
               className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-medium transition-all ${
-                p === page
+                n === page
                   ? 'bg-ink text-cream'
                   : 'bg-white border border-cream-warm text-ink-muted hover:border-ink/20 hover:text-ink'
               }`}>
-              {p}
+              {n}
             </Link>
           ))}
           {page < pages && (

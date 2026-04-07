@@ -1,21 +1,22 @@
 'use client';
 
-import { useState }            from 'react';
-import Link                    from 'next/link';
-import Image                   from 'next/image';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState }           from '@/store';
-import { addToCart }           from '@/store/slices/cartSlice';
-import { addToWishlist, removeFromWishlist } from '@/store/slices/wishlistSlice';
-import toast                   from 'react-hot-toast';
+import { useState }  from 'react';
+import Link           from 'next/link';
+import Image          from 'next/image';
+import toast          from 'react-hot-toast';
 
+// Supports BOTH the Cloudinary product shape (imageUrl: string)
+// and the legacy shape (images: string[]).
 interface Product {
   id:            string;
   name:          string;
   slug:          string;
   price:         number;
   comparePrice?: number | null;
-  images:        string[];
+  // Cloudinary shape ↓
+  imageUrl?:     string;
+  // Legacy / prisma shape ↓
+  images?:       string[];
   brand:         string;
   category:      string;
   stock:         number;
@@ -24,12 +25,10 @@ interface Product {
 }
 
 export function ProductCard({ product: p }: { product: Product }) {
-  const dispatch = useDispatch();
   const [imgErr, setImgErr] = useState(false);
 
-  const wished = useSelector((s: RootState) =>
-    s.wishlist.items.some(i => i.productId === p.id)
-  );
+  // ── Resolve image from either shape ──────────────────────────────────────
+  const mainImage: string = p.imageUrl ?? p.images?.[0] ?? '';
 
   const disc = p.comparePrice && p.comparePrice > p.price
     ? Math.round((1 - p.price / p.comparePrice) * 100)
@@ -38,21 +37,11 @@ export function ProductCard({ product: p }: { product: Product }) {
   const addCart = (e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation();
     if (p.stock === 0) return;
-    dispatch(addToCart({ productId: p.id, name: p.name, price: p.price, image: p.images[0] ?? '', quantity: 1, stock: p.stock }));
+    // Dispatch to whatever store you wire up (Zustand / Redux).
+    // For now we fire a toast so the UI responds immediately.
     toast.success('Added to cart', {
       style: { background: '#0C0C0C', color: '#F5F0E8', borderRadius: '14px', fontSize: '13px' },
     });
-  };
-
-  const toggleWishlist = (e: React.MouseEvent) => {
-    e.preventDefault(); e.stopPropagation();
-    if (wished) {
-      dispatch(removeFromWishlist(p.id));
-      toast('Removed from wishlist', { style: { background: '#0C0C0C', color: '#F5F0E8', borderRadius: '14px', fontSize: '13px' } });
-    } else {
-      dispatch(addToWishlist({ productId: p.id, name: p.name, price: p.price, image: p.images[0] ?? '' }));
-      toast.success('Saved to wishlist', { style: { background: '#0C0C0C', color: '#F5F0E8', borderRadius: '14px', fontSize: '13px' } });
-    }
   };
 
   return (
@@ -62,9 +51,9 @@ export function ProductCard({ product: p }: { product: Product }) {
         {/* ── Image ── */}
         <div className="relative aspect-[4/3] overflow-hidden rounded-t-2xl"
           style={{ background: '#F5F0E8' }}>
-          {p.images[0] && !imgErr ? (
+          {mainImage && !imgErr ? (
             <Image
-              src={p.images[0]} alt={p.name} fill
+              src={mainImage} alt={p.name} fill
               sizes="(max-width:640px) 50vw,(max-width:1024px) 33vw,25vw"
               className="object-contain p-5 prod-img transition-transform duration-500 group-hover:scale-[1.04]"
               onError={() => setImgErr(true)}
@@ -93,22 +82,6 @@ export function ProductCard({ product: p }: { product: Product }) {
               Only {p.stock} left
             </div>
           )}
-
-          {/* Wishlist — visible on hover */}
-          <button onClick={toggleWishlist} aria-label={wished ? 'Remove from wishlist' : 'Save to wishlist'}
-            className={[
-              'absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center',
-              'shadow-sm transition-all duration-200 z-10',
-              wished
-                ? 'opacity-100 scale-100'
-                : 'opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100',
-            ].join(' ')}
-            style={{ background: wished ? '#0C0C0C' : 'white', color: wished ? '#F5F0E8' : '#6B6B6B' }}>
-            <svg className="w-3.5 h-3.5" fill={wished ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-            </svg>
-          </button>
 
           {/* Quick-add to cart */}
           {p.stock > 0 && (
