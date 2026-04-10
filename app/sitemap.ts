@@ -7,8 +7,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl  = process.env.NEXT_PUBLIC_APP_URL ?? 'https://smartechkenya.com';
   const products = await listProducts().catch(() => []);
 
+  // BUG FIX: Use p.sku to match ProductCard href — was using p.slug which
+  // could diverge from what the product page actually resolves.
   const productUrls: MetadataRoute.Sitemap = products.map(p => ({
-    url:             `${baseUrl}/products/${p.slug}`,
+    url:             `${baseUrl}/products/${encodeURIComponent(p.sku)}`,
     lastModified:    new Date(p.createdAt),
     changeFrequency: 'weekly',
     priority:        0.8,

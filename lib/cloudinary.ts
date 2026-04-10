@@ -2,18 +2,15 @@
  * lib/cloudinary.ts
  * Single source of truth for all Cloudinary operations.
  * Products are stored as images with context metadata — no database needed.
- *
- * Context format:  key=value|key=value  (| and = inside values are backslash-escaped)
- * Public ID:       smartech-products/{SKU_SAFE}
  */
 
 const CLOUD = process.env.CLOUDINARY_CLOUD_NAME!;
 const KEY   = process.env.CLOUDINARY_API_KEY!;
 const SEC   = process.env.CLOUDINARY_API_SECRET!;
 
-/* ── Types ─────────────────────────────────────────────────────────────────── */
+/* ── Types ──────────────────────────────────────────────────────────────────── */
 export interface CldProduct {
-  id:            string;   // public_id  e.g. "smartech-products/MIKA_WM_8KG"
+  id:            string;
   sku:           string;
   name:          string;
   brand:         string;
@@ -32,7 +29,7 @@ export interface CldProduct {
   reviewCount:   number;
 }
 
-/* ── Internal helpers ───────────────────────────────────────────────────────── */
+/* ── Helpers ────────────────────────────────────────────────────────────────── */
 function b64auth() {
   return 'Basic ' + Buffer.from(`${KEY}:${SEC}`).toString('base64');
 }
@@ -97,7 +94,12 @@ function parseResource(r: any): CldProduct {
 
 /* ── Public API ─────────────────────────────────────────────────────────────── */
 
-/** List all active products (fetches from Cloudinary Search API). */
+/**
+ * List active products.
+ * BUG FIX: Previously passed opts.limit as max_results to Cloudinary, which
+ * truncated results BEFORE client-side filters (featured, category) ran.
+ * Fix: always fetch 500, apply all filters, then slice to limit.
+ */
 export async function listProducts(opts?: {
   category?: string;
   brand?:    string;
@@ -106,121 +108,128 @@ export async function listProducts(opts?: {
   limit?:    number;
 }): Promise<CldProduct[]> {
   try {
-    const body = {
-      expression:  'folder:smartech-products',
-      with_field:  ['context'],
-      max_results: opts?.limit ?? 500,
-      sort_by:     [{ created_at: 'desc' }],
-    };
     const res = await fetch(
       `https://api.cloudinary.com/v1_1/${CLOUD}/resources/search`,
-      { method: 'POST', headers: { Authorization: b64auth(), 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+      {
+        method:  'POST',
+        headers: { Authorization: b64auth(), 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          expression:  'folder:smartech-products',
+          with_field:  ['context'],
+          max_results: 500,
+          sort_by:     [{ created_at: 'desc' }],
+        }),
+        cache: 'no-store',
+      }
     );
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.error('Cloudinary Search API error:', res.status, await res.text().catch(() => ''));
+      return [];
+    }
     const data = await res.json();
 
-    let products: CldProduct[] = (data.resources ?? []).map(parseResource).filter((p: CldProduct) => p.isActive);
+    // Only show products with real metadata (name exists and differs from auto-derived sku)
+    let products: CldProduct[] = (data.resources ?? [])
+      .map(parseResource)
+      .filter((p: CldProduct) => p.isActive && p.name && p.name !== p.sku);
 
-    if (opts?.featured)  products = products.filter(p => p.isFeatured);
-    if (opts?.category)  products = products.filter(p => p.category === opts.category);
-    if (opts?.brand)     products = products.filter(p => p.brand.toLowerCase() === opts.brand!.toLowerCase());
+    if (opts?.featured) products = products.filter(p => p.isFeatured);
+    if (opts?.category) products = products.filter(p => p.category === opts.category);
+    if (opts?.brand)    products = products.filter(p => p.brand.toLowerCase() === opts.brand!.toLowerCase());
     if (opts?.search) {
       const q = opts.search.toLowerCase();
       products = products.filter(p =>
-        p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) ||
-        p.sku.toLowerCase().includes(q)  || p.description?.toLowerCase().includes(q)
+        p.name.toLowerCase().includes(q)        ||
+        p.brand.toLowerCase().includes(q)       ||
+        p.sku.toLowerCase().includes(q)         ||
+        (p.description?.toLowerCase().includes(q) ?? false)
       );
     }
+
+    // Slice AFTER filtering
+    if (opts?.limit) products = products.slice(0, opts.limit);
     return products;
-  } catch { return []; }
+  } catch (err) {
+    console.error('listProducts error:', err);
+    return [];
+  }
 }
 
-/** Get a single product by SKU. */
+/** Get a single product by SKU — fast direct lookup. */
 export async function getProductBySku(sku: string): Promise<CldProduct | null> {
   try {
     const pid = skuToPublicId(sku);
     const res = await fetch(
       `https://api.cloudinary.com/v1_1/${CLOUD}/resources/image/upload/${pid}?context=true`,
-      { headers: { Authorization: b64auth() } }
+      { headers: { Authorization: b64auth() }, cache: 'no-store' }
     );
     if (!res.ok) return null;
     return parseResource(await res.json());
   } catch { return null; }
 }
 
-/** Get a product by slug (searches all products for matching slug). */
+/** Get a product by slug. */
 export async function getProductBySlug(slug: string): Promise<CldProduct | null> {
-  // slug is {name-parts}-{sku_lowercased}, try SKU first
   const parts = slug.split('-');
   for (let i = parts.length - 1; i >= Math.max(0, parts.length - 4); i--) {
     const candidate = parts.slice(i).join('-').toUpperCase();
     const p = await getProductBySku(candidate);
     if (p) return p;
   }
-  // Fallback: list all and match slug field
   const all = await listProducts();
   return all.find(p => p.slug === slug) ?? null;
 }
 
-/**
- * Create a new product — uploads image + sets context metadata.
- * Pass imageBase64 = '' to create a product without an image for now.
- */
+/** Create a new product — uploads image + sets context metadata. */
 export async function createProduct(
   imageBase64: string,
   fields: Omit<CldProduct, 'id' | 'images' | 'avgRating' | 'reviewCount'>
 ): Promise<CldProduct> {
-  const pid = skuToPublicId(fields.sku);
-  const ctx = buildContext({ ...fields });
-  const ts  = Math.floor(Date.now() / 1000);
+  const pid  = skuToPublicId(fields.sku);
+  const ctx  = buildContext({ ...fields });
+  const ts   = Math.floor(Date.now() / 1000);
+  const file = imageBase64 || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
-  if (imageBase64) {
-    // Sign: context, overwrite, public_id, timestamp (alphabetical)
-    const sigStr = `context=${ctx}&overwrite=true&public_id=${pid}&timestamp=${ts}${SEC}`;
-    const sig    = await sha1(sigStr);
-    const form   = new URLSearchParams({
-      file: imageBase64, public_id: pid, overwrite: 'true',
-      context: ctx, api_key: KEY, timestamp: String(ts), signature: sig,
-    });
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`, { method: 'POST', body: form });
-    if (!res.ok) throw new Error(`Cloudinary upload failed: ${await res.text()}`);
-    return parseResource(await res.json());
-  } else {
-    // Upload a placeholder pixel so the resource exists, then update context
-    const placeholder = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-    const sigStr = `context=${ctx}&overwrite=true&public_id=${pid}&timestamp=${ts}${SEC}`;
-    const sig    = await sha1(sigStr);
-    const form   = new URLSearchParams({
-      file: placeholder, public_id: pid, overwrite: 'true',
-      context: ctx, api_key: KEY, timestamp: String(ts), signature: sig,
-    });
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`, { method: 'POST', body: form });
-    if (!res.ok) throw new Error(`Cloudinary create failed: ${await res.text()}`);
-    return parseResource(await res.json());
-  }
+  const sig = await sha1(`context=${ctx}&overwrite=true&public_id=${pid}&timestamp=${ts}${SEC}`);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`, {
+    method: 'POST',
+    body:   new URLSearchParams({ file, public_id: pid, overwrite: 'true', context: ctx, api_key: KEY, timestamp: String(ts), signature: sig }),
+  });
+  if (!res.ok) throw new Error(`Cloudinary upload failed: ${await res.text()}`);
+  return parseResource(await res.json());
 }
 
 /**
- * Update just the image of an existing product (preserves existing context).
+ * Update just the image of a product while preserving all metadata.
+ * BUG FIX: Cloudinary wipes context on overwrite if context param is omitted.
+ * We fetch the existing product first and re-include its context.
  */
 export async function updateProductImage(imageBase64: string, sku: string): Promise<string> {
-  const pid    = skuToPublicId(sku);
-  const ts     = Math.floor(Date.now() / 1000);
-  const sigStr = `overwrite=true&public_id=${pid}&timestamp=${ts}${SEC}`;
-  const sig    = await sha1(sigStr);
-  const form   = new URLSearchParams({
-    file: imageBase64, public_id: pid, overwrite: 'true',
-    api_key: KEY, timestamp: String(ts), signature: sig,
+  const pid      = skuToPublicId(sku);
+  const ts       = Math.floor(Date.now() / 1000);
+  const existing = await getProductBySku(sku);
+  const ctx      = existing ? buildContext(existing) : '';
+
+  const formObj: Record<string, string> = {
+    file: imageBase64, public_id: pid, overwrite: 'true', api_key: KEY, timestamp: String(ts),
+  };
+
+  if (ctx) {
+    formObj.context   = ctx;
+    formObj.signature = await sha1(`context=${ctx}&overwrite=true&public_id=${pid}&timestamp=${ts}${SEC}`);
+  } else {
+    formObj.signature = await sha1(`overwrite=true&public_id=${pid}&timestamp=${ts}${SEC}`);
+  }
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`, {
+    method: 'POST',
+    body:   new URLSearchParams(formObj),
   });
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`, { method: 'POST', body: form });
-  if (!res.ok) throw new Error(`Cloudinary upload failed: ${res.status}`);
+  if (!res.ok) throw new Error(`Image update failed: ${res.status}`);
   return (await res.json()).secure_url as string;
 }
 
-/**
- * Update context (metadata) of an existing product without touching the image.
- * Uses Cloudinary Admin API with Basic auth (no signature needed).
- */
+/** Update context metadata without touching the image. */
 export async function updateProductContext(sku: string, fields: Partial<CldProduct>): Promise<void> {
   const pid = skuToPublicId(sku);
   const ctx = buildContext(fields);
@@ -230,26 +239,33 @@ export async function updateProductContext(sku: string, fields: Partial<CldProdu
       method:  'POST',
       headers: { Authorization: b64auth(), 'Content-Type': 'application/json' },
       body:    JSON.stringify({ context: ctx, public_ids: [pid], type: 'upload' }),
+      cache:   'no-store',
     }
   );
   if (!res.ok) throw new Error(`Context update failed: ${res.status}`);
 }
 
-/** List all products including inactive (for admin). */
+/** List all products including inactive (admin use). */
 export async function listAllProducts(): Promise<CldProduct[]> {
   try {
-    const body = {
-      expression:  'folder:smartech-products',
-      with_field:  ['context'],
-      max_results: 500,
-      sort_by:     [{ created_at: 'desc' }],
-    };
     const res = await fetch(
       `https://api.cloudinary.com/v1_1/${CLOUD}/resources/search`,
-      { method: 'POST', headers: { Authorization: b64auth(), 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+      {
+        method:  'POST',
+        headers: { Authorization: b64auth(), 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          expression:  'folder:smartech-products',
+          with_field:  ['context'],
+          max_results: 500,
+          sort_by:     [{ created_at: 'desc' }],
+        }),
+        cache: 'no-store',
+      }
     );
     if (!res.ok) return [];
     const data = await res.json();
-    return (data.resources ?? []).map(parseResource);
+    return (data.resources ?? [])
+      .map(parseResource)
+      .filter((p: CldProduct) => p.name && p.name !== p.sku);
   } catch { return []; }
 }

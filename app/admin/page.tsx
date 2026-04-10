@@ -73,7 +73,7 @@ export default function AdminPage() {
   const [dbError,  setDbError]  = useState('');
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
-  const [tab,      setTab]      = useState<'images'|'folder'|'direct'|'add'>('direct');
+  const [tab,      setTab]      = useState<'images'|'folder'|'direct'|'add'>('add');
 
   /* Login: auth via DB-free endpoint, then try to load products */
   const login = async () => {
@@ -256,7 +256,7 @@ function DirectUpload({ secret }: { secret: string }) {
       <div>
         <h2 className="text-lg font-bold" style={{ color: '#0C0C0C' }}>Direct Cloudinary Upload</h2>
         <p className="text-sm mt-1" style={{ color: '#6B6B6B' }}>
-          Upload any image straight to Cloudinary and get the URL. Works even when the database is offline.
+          Upload an image to Cloudinary and get its URL. Use this URL in the Add Product tab. This does NOT create a product entry — use Add Product for that.
           Paste the URL into your product record manually if needed.
         </p>
       </div>

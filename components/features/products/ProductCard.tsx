@@ -5,17 +5,14 @@ import Link           from 'next/link';
 import Image          from 'next/image';
 import toast          from 'react-hot-toast';
 
-// Supports BOTH the Cloudinary product shape (imageUrl: string)
-// and the legacy shape (images: string[]).
 interface Product {
   id:            string;
   name:          string;
   slug:          string;
+  sku:           string;
   price:         number;
   comparePrice?: number | null;
-  // Cloudinary shape ↓
   imageUrl?:     string;
-  // Legacy / prisma shape ↓
   images?:       string[];
   brand:         string;
   category:      string;
@@ -27,7 +24,6 @@ interface Product {
 export function ProductCard({ product: p }: { product: Product }) {
   const [imgErr, setImgErr] = useState(false);
 
-  // ── Resolve image from either shape ──────────────────────────────────────
   const mainImage: string = p.imageUrl ?? p.images?.[0] ?? '';
 
   const disc = p.comparePrice && p.comparePrice > p.price
@@ -37,15 +33,17 @@ export function ProductCard({ product: p }: { product: Product }) {
   const addCart = (e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation();
     if (p.stock === 0) return;
-    // Dispatch to whatever store you wire up (Zustand / Redux).
-    // For now we fire a toast so the UI responds immediately.
     toast.success('Added to cart', {
       style: { background: '#0C0C0C', color: '#F5F0E8', borderRadius: '14px', fontSize: '13px' },
     });
   };
 
+  // BUG FIX: p.id is "smartech-products/MIKA_WM_8KG" which contains "/" and
+  // broke the URL completely. Use p.sku which is clean and URL-safe.
+  const productUrl = `/products/${encodeURIComponent(p.sku)}`;
+
   return (
-    <Link href={`/products/${p.slug}-${p.id}`} className="group block">
+    <Link href={productUrl} className="group block">
       <article className="card h-full flex flex-col">
 
         {/* ── Image ── */}
@@ -67,7 +65,6 @@ export function ProductCard({ product: p }: { product: Product }) {
             </div>
           )}
 
-          {/* Discount badge */}
           {disc !== null && disc > 0 && (
             <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide text-white"
               style={{ background: '#C0392B' }}>
@@ -75,7 +72,6 @@ export function ProductCard({ product: p }: { product: Product }) {
             </div>
           )}
 
-          {/* Low stock */}
           {p.stock > 0 && p.stock <= 3 && (
             <div className="absolute bottom-3 left-3 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wide text-white"
               style={{ background: '#8B5A1A' }}>
@@ -83,7 +79,6 @@ export function ProductCard({ product: p }: { product: Product }) {
             </div>
           )}
 
-          {/* Quick-add to cart */}
           {p.stock > 0 && (
             <button onClick={addCart} aria-label="Add to cart"
               className="absolute bottom-3 right-3 w-9 h-9 rounded-xl flex items-center justify-center shadow-md z-10
@@ -96,7 +91,6 @@ export function ProductCard({ product: p }: { product: Product }) {
             </button>
           )}
 
-          {/* Out of stock overlay */}
           {p.stock === 0 && (
             <div className="absolute inset-0 flex items-center justify-center"
               style={{ background: 'rgba(255,255,255,0.65)' }}>

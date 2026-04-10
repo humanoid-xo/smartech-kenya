@@ -3,9 +3,8 @@ const nextConfig = {
   eslint:     { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
 
-  experimental: {
-    serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
-  },
+  // serverComponentsExternalPackages moved to top-level in Next.js 14.2+
+  serverExternalPackages: ['@prisma/client', 'bcryptjs'],
 
   images: {
     remotePatterns: [
@@ -23,9 +22,9 @@ const nextConfig = {
       {
         source: '/(.*)',
         headers: [
-          { key: 'X-Frame-Options',       value: 'DENY'                            },
-          { key: 'X-Content-Type-Options', value: 'nosniff'                         },
-          { key: 'Referrer-Policy',        value: 'strict-origin-when-cross-origin' },
+          { key: 'X-Frame-Options',        value: 'DENY'                            },
+          { key: 'X-Content-Type-Options',  value: 'nosniff'                         },
+          { key: 'Referrer-Policy',         value: 'strict-origin-when-cross-origin' },
         ],
       },
       {
