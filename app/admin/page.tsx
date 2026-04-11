@@ -791,12 +791,42 @@ function AddProduct({ secret }: { secret: string }) {
 }
 
 /* ══════════════════════════════════════════════════════════
-   MANAGE PRODUCTS — toggle isFeatured / isActive on existing uploads
+   MANAGE PRODUCTS — polished product management panel
 ══════════════════════════════════════════════════════════ */
 interface ManagedProduct {
   id: string; sku: string; name: string; brand: string; category: string;
-  price: number; images: string[]; isFeatured: boolean; isActive: boolean; slug: string;
+  price: number; comparePrice?: number; stock: number;
+  images: string[]; isFeatured: boolean; isActive: boolean; slug: string;
 }
+
+function Toggle({ on, onChange, disabled, color = '#8B5A1A' }: {
+  on: boolean; onChange: () => void; disabled?: boolean; color?: string;
+}) {
+  return (
+    <div
+      onClick={() => !disabled && onChange()}
+      className="relative w-11 h-6 rounded-full transition-all duration-200 flex-shrink-0"
+      style={{
+        background: on ? color : '#D4C9B8',
+        cursor: disabled ? 'wait' : 'pointer',
+        boxShadow: on ? `0 0 0 3px ${color}22` : 'none',
+      }}>
+      <div
+        className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform duration-200"
+        style={{
+          transform: on ? 'translateX(20px)' : 'translateX(0)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.20)',
+        }}
+      />
+    </div>
+  );
+}
+
+const CATEGORY_LABELS: Record<string, string> = {
+  SMARTPHONES: 'Phones', LAPTOPS: 'Laptops', HOME_APPLIANCES: 'Appliances',
+  KITCHEN: 'Kitchen', BEDROOM: 'Bedroom', AUDIO_TV: 'Audio/TV',
+  ELECTRICAL: 'Electrical', SMART_HOME: 'Smart Home', OTHER: 'Other',
+};
 
 function ManageProducts({ secret }: { secret: string }) {
   const [products, setProducts] = useState<ManagedProduct[]>([]);
@@ -805,6 +835,7 @@ function ManageProducts({ secret }: { secret: string }) {
   const [saving,   setSaving]   = useState<string | null>(null);
   const [flash,    setFlash]    = useState<Record<string, string>>({});
   const [search,   setSearch]   = useState('');
+  const [filter,   setFilter]   = useState<'all'|'featured'|'inactive'>('all');
 
   const load = async () => {
     setLoading(true); setError('');
@@ -831,118 +862,240 @@ function ManageProducts({ secret }: { secret: string }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed');
       setProducts(ps => ps.map(p => p.sku === sku ? { ...p, ...fields } : p));
-      setFlash(f => ({ ...f, [sku]: '✓ Saved' }));
-      setTimeout(() => setFlash(f => { const n = { ...f }; delete n[sku]; return n; }), 2000);
+      setFlash(f => ({ ...f, [sku]: 'saved' }));
+      setTimeout(() => setFlash(f => { const n = { ...f }; delete n[sku]; return n; }), 2500);
     } catch (e: any) {
-      setFlash(f => ({ ...f, [sku]: '✗ ' + e.message }));
-      setTimeout(() => setFlash(f => { const n = { ...f }; delete n[sku]; return n; }), 3000);
+      setFlash(f => ({ ...f, [sku]: 'error:' + e.message }));
+      setTimeout(() => setFlash(f => { const n = { ...f }; delete n[sku]; return n; }), 4000);
     }
     setSaving(null);
   };
 
   const filtered = products.filter(p => {
+    if (filter === 'featured'  && !p.isFeatured) return false;
+    if (filter === 'inactive'  && p.isActive)    return false;
     if (!search) return true;
     const q = search.toLowerCase();
     return p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q);
   });
 
-  const inp = 'w-full px-3 py-2 rounded-lg text-sm focus:outline-none';
-  const inpStyle = { background: 'white', border: '1px solid #EDE7D9', color: '#0C0C0C' };
+  const featuredCount  = products.filter(p => p.isFeatured).length;
+  const inactiveCount  = products.filter(p => !p.isActive).length;
+
+  const FILTER_TABS = [
+    { id: 'all',      label: `All (${products.length})` },
+    { id: 'featured', label: `★ Featured (${featuredCount})` },
+    { id: 'inactive', label: `Hidden (${inactiveCount})` },
+  ] as const;
 
   if (loading) return (
-    <div className="text-center py-20 text-sm" style={{ color: '#6B6B6B' }}>
-      Loading products from Cloudinary…
+    <div className="flex flex-col items-center justify-center py-24 gap-4">
+      <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
+        style={{ borderColor: '#8B5A1A', borderTopColor: 'transparent' }}/>
+      <p className="text-sm" style={{ color: '#6B6B6B' }}>Loading from Cloudinary…</p>
     </div>
   );
+
   if (error) return (
-    <div className="text-center py-20">
-      <p className="text-red-500 text-sm mb-4">{error}</p>
-      <button onClick={load} className="px-4 py-2 rounded-lg text-sm font-semibold"
-        style={{ background: '#0C0C0C', color: '#F5F0E8' }}>Retry</button>
+    <div className="flex flex-col items-center justify-center py-24 gap-4">
+      <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
+        style={{ background: 'rgba(220,38,38,0.08)' }}>
+        <span className="text-xl">⚠</span>
+      </div>
+      <p className="text-sm text-red-500">{error}</p>
+      <button onClick={load}
+        className="px-5 py-2.5 rounded-xl text-sm font-semibold"
+        style={{ background: '#0C0C0C', color: '#F5F0E8' }}>
+        Try again
+      </button>
     </div>
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+    <div className="space-y-5">
+      {/* Header row */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h2 className="text-lg font-bold" style={{ color: '#0C0C0C' }}>Manage Products</h2>
-          <p className="text-xs mt-0.5" style={{ color: '#6B6B6B' }}>{products.length} products · toggle Featured or Active without re-uploading</p>
+          <p className="text-xs mt-1" style={{ color: '#9B8B7A' }}>
+            Toggle Featured &amp; Active status live — no re-upload needed
+          </p>
         </div>
-        <div className="flex gap-2">
-          <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Search by name, SKU, brand…"
-            className={inp} style={{ ...inpStyle, width: '220px' }}/>
-          <button onClick={load} className="px-4 py-2 rounded-lg text-xs font-semibold border"
+        <div className="flex gap-2 items-center flex-wrap">
+          <div className="relative">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none"
+              style={{ color: '#B8A99A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
+            </svg>
+            <input value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Search products…"
+              className="pl-9 pr-4 py-2 rounded-xl text-sm focus:outline-none"
+              style={{ background: 'white', border: '1px solid #EDE7D9', color: '#0C0C0C', width: '200px' }}/>
+          </div>
+          <button onClick={load}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-colors"
             style={{ borderColor: '#D4C9B8', color: '#6B6B6B', background: 'white' }}>
-            ↻ Refresh
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            Refresh
           </button>
         </div>
       </div>
 
-      {filtered.length === 0 && (
-        <div className="text-center py-16 text-sm" style={{ color: '#6B6B6B' }}>
-          {search ? 'No products match your search.' : 'No products found in Cloudinary.'}
-        </div>
-      )}
-
-      <div className="grid gap-3">
-        {filtered.map(p => (
-          <div key={p.sku} className="flex items-center gap-4 p-4 rounded-2xl border"
-            style={{ background: 'white', borderColor: '#EDE7D9', opacity: p.isActive ? 1 : 0.55 }}>
-
-            <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100">
-              {p.images[0]
-                ? <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover"/>
-                : <div className="w-full h-full flex items-center justify-center text-xl">🖼</div>}
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm truncate" style={{ color: '#0C0C0C' }}>{p.name}</p>
-              <p className="text-xs mt-0.5" style={{ color: '#6B6B6B' }}>
-                {p.brand} · {p.category} · SKU: {p.sku}
-              </p>
-              <p className="text-xs font-bold mt-0.5" style={{ color: '#8B5A1A' }}>
-                KES {p.price.toLocaleString()}
-              </p>
-            </div>
-
-            {flash[p.sku] && (
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
-                style={{
-                  background: flash[p.sku].startsWith('✓') ? 'rgba(22,101,52,0.10)' : 'rgba(220,38,38,0.08)',
-                  color:      flash[p.sku].startsWith('✓') ? '#166534' : '#dc2626',
-                }}>
-                {flash[p.sku]}
-              </span>
-            )}
-
-            <div className="flex items-center gap-4 flex-shrink-0">
-              <label className="flex flex-col items-center gap-1 cursor-pointer">
-                <span className="text-[10px] font-semibold" style={{ color: '#6B6B6B' }}>Featured</span>
-                <div
-                  onClick={() => saving !== p.sku && patch(p.sku, { isFeatured: !p.isFeatured })}
-                  className="relative w-10 h-5 rounded-full transition-colors duration-200"
-                  style={{ background: p.isFeatured ? '#8B5A1A' : '#D4C9B8', cursor: saving === p.sku ? 'wait' : 'pointer' }}>
-                  <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200"
-                    style={{ transform: p.isFeatured ? 'translateX(20px)' : 'translateX(0)' }}/>
-                </div>
-              </label>
-
-              <label className="flex flex-col items-center gap-1 cursor-pointer">
-                <span className="text-[10px] font-semibold" style={{ color: '#6B6B6B' }}>Active</span>
-                <div
-                  onClick={() => saving !== p.sku && patch(p.sku, { isActive: !p.isActive })}
-                  className="relative w-10 h-5 rounded-full transition-colors duration-200"
-                  style={{ background: p.isActive ? '#166534' : '#D4C9B8', cursor: saving === p.sku ? 'wait' : 'pointer' }}>
-                  <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200"
-                    style={{ transform: p.isActive ? 'translateX(20px)' : 'translateX(0)' }}/>
-                </div>
-              </label>
-            </div>
+      {/* Stats bar */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: 'Total',    value: products.length,  color: '#0C0C0C' },
+          { label: 'Featured', value: featuredCount,    color: '#8B5A1A' },
+          { label: 'Hidden',   value: inactiveCount,    color: '#6B7280' },
+        ].map(s => (
+          <div key={s.label} className="p-4 rounded-2xl border text-center"
+            style={{ background: 'white', borderColor: '#EDE7D9' }}>
+            <p className="text-2xl font-bold" style={{ color: s.color }}>{s.value}</p>
+            <p className="text-xs mt-0.5" style={{ color: '#9B8B7A' }}>{s.label}</p>
           </div>
         ))}
       </div>
+
+      {/* Filter tabs */}
+      <div className="flex gap-1 p-1 rounded-xl" style={{ background: '#F0EBE3' }}>
+        {FILTER_TABS.map(t => (
+          <button key={t.id} onClick={() => setFilter(t.id)}
+            className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all"
+            style={{
+              background: filter === t.id ? 'white' : 'transparent',
+              color:      filter === t.id ? '#0C0C0C' : '#9B8B7A',
+              boxShadow:  filter === t.id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+            }}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Product list */}
+      {filtered.length === 0 ? (
+        <div className="text-center py-16 rounded-2xl border border-dashed"
+          style={{ borderColor: '#D4C9B8', color: '#9B8B7A' }}>
+          <p className="text-3xl mb-3">📦</p>
+          <p className="text-sm font-medium">No products match</p>
+          <p className="text-xs mt-1">Try clearing the search or changing the filter</p>
+        </div>
+      ) : (
+        <div className="grid gap-2">
+          {filtered.map(p => {
+            const isFlashing = !!flash[p.sku];
+            const hasError   = flash[p.sku]?.startsWith('error:');
+            const isBusy     = saving === p.sku;
+
+            return (
+              <div key={p.sku}
+                className="flex items-center gap-4 p-3.5 rounded-2xl border transition-all duration-200"
+                style={{
+                  background:   'white',
+                  borderColor:  isFlashing ? (hasError ? 'rgba(220,38,38,0.30)' : 'rgba(22,101,52,0.25)') : '#EDE7D9',
+                  opacity:      p.isActive ? 1 : 0.6,
+                  boxShadow:    isBusy ? '0 0 0 2px rgba(139,90,26,0.15)' : 'none',
+                }}>
+
+                {/* Thumbnail */}
+                <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0"
+                  style={{ background: '#F7F4F0' }}>
+                  {p.images[0]
+                    ? <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover"/>
+                    : <div className="w-full h-full flex items-center justify-center text-2xl">📷</div>}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-semibold text-sm" style={{ color: '#0C0C0C' }}>{p.name}</p>
+                    {p.isFeatured && (
+                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-full tracking-wide"
+                        style={{ background: 'rgba(139,90,26,0.12)', color: '#8B5A1A' }}>
+                        ★ FEATURED
+                      </span>
+                    )}
+                    {!p.isActive && (
+                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-full tracking-wide"
+                        style={{ background: 'rgba(100,100,100,0.10)', color: '#6B7280' }}>
+                        HIDDEN
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs mt-0.5" style={{ color: '#9B8B7A' }}>
+                    {p.brand}
+                    <span className="mx-1.5 opacity-40">·</span>
+                    {CATEGORY_LABELS[p.category] ?? p.category}
+                    <span className="mx-1.5 opacity-40">·</span>
+                    SKU: <span className="font-mono">{p.sku}</span>
+                  </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="text-sm font-bold" style={{ color: '#0C0C0C' }}>
+                      KES {Number(p.price).toLocaleString()}
+                    </p>
+                    {p.comparePrice && (
+                      <p className="text-xs line-through" style={{ color: '#B8A99A' }}>
+                        KES {Number(p.comparePrice).toLocaleString()}
+                      </p>
+                    )}
+                    <span className="text-xs" style={{ color: '#9B8B7A' }}>
+                      · Stock: {p.stock}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Flash message */}
+                {isFlashing && (
+                  <div className="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold"
+                    style={{
+                      background: hasError ? 'rgba(220,38,38,0.08)' : 'rgba(22,101,52,0.08)',
+                      color:      hasError ? '#dc2626' : '#166534',
+                    }}>
+                    {hasError ? '✗ Failed' : '✓ Saved'}
+                  </div>
+                )}
+
+                {/* Spinner while saving */}
+                {isBusy && !isFlashing && (
+                  <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin flex-shrink-0"
+                    style={{ borderColor: '#8B5A1A', borderTopColor: 'transparent' }}/>
+                )}
+
+                {/* Toggles */}
+                <div className="flex items-center gap-5 flex-shrink-0">
+                  <div className="flex flex-col items-center gap-1.5">
+                    <Toggle
+                      on={p.isFeatured}
+                      onChange={() => patch(p.sku, { isFeatured: !p.isFeatured })}
+                      disabled={isBusy}
+                      color="#8B5A1A"
+                    />
+                    <span className="text-[9px] font-semibold tracking-wide uppercase"
+                      style={{ color: p.isFeatured ? '#8B5A1A' : '#B8A99A' }}>
+                      Featured
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1.5">
+                    <Toggle
+                      on={p.isActive}
+                      onChange={() => patch(p.sku, { isActive: !p.isActive })}
+                      disabled={isBusy}
+                      color="#166534"
+                    />
+                    <span className="text-[9px] font-semibold tracking-wide uppercase"
+                      style={{ color: p.isActive ? '#166534' : '#B8A99A' }}>
+                      Active
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

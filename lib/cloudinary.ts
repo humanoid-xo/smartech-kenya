@@ -234,20 +234,28 @@ export async function updateProductImage(imageBase64: string, sku: string): Prom
   return (await res.json()).secure_url as string;
 }
 
-/** Update context metadata without touching the image. */
+/**
+ * Update context metadata without changing the image.
+ * Cloudinary Admin API /context endpoint returns 404 on free plans.
+ * Fix: re-post the existing image URL with overwrite=true and full merged context.
+ */
 export async function updateProductContext(sku: string, fields: Partial<CldProduct>): Promise<void> {
   const pid = skuToPublicId(sku);
-  const ctx = buildContext(fields);
-  const res = await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUD}/resources/image/upload/context`,
-    {
-      method:  'POST',
-      headers: { Authorization: b64auth(), 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ context: ctx, public_ids: [pid], type: 'upload' }),
-      cache:   'no-store',
-    }
-  );
-  if (!res.ok) throw new Error(`Context update failed: ${res.status}`);
+  const existing = await getProductBySku(sku);
+  if (!existing) throw new Error(`Product not found: ${sku}`);
+  const merged = { ...existing, ...fields };
+  const ctx    = buildContext(merged);
+  const ts     = Math.floor(Date.now() / 1000);
+  const imgUrl = existing.images[0];
+  const sig    = await sha1(`context=${ctx}&overwrite=true&public_id=${pid}&timestamp=${ts}${SEC}`);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`, {
+    method: 'POST',
+    body:   new URLSearchParams({ file: imgUrl, public_id: pid, overwrite: 'true', context: ctx, api_key: KEY, timestamp: String(ts), signature: sig }),
+  });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => String(res.status));
+    throw new Error(`Context update failed: ${txt}`);
+  }
 }
 
 /** List all products including inactive (admin use). */
