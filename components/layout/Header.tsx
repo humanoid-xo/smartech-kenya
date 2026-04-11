@@ -94,7 +94,7 @@ export function Header() {
   const isAdmin = !!(session?.user as any)?.isAdmin;
 
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 60);
+    const fn = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', fn, { passive: true }); fn();
     return () => window.removeEventListener('scroll', fn);
   }, []);
@@ -145,7 +145,7 @@ export function Header() {
         'sticky top-0 z-50 transition-all duration-300',
         scrolled || !isHome
           ? 'bg-white border-b border-gray-100 shadow-[0_1px_16px_rgba(0,0,0,0.06)]'
-          : 'bg-transparent',
+          : 'bg-gradient-to-b from-black/40 via-black/10 to-transparent',
       ].join(' ')}>
 
         <div className="max-w-[1320px] mx-auto px-5 flex items-center gap-4 h-[62px]">
@@ -174,14 +174,14 @@ export function Header() {
           {/* Right actions */}
           <div className="flex items-center gap-0.5 ml-auto md:ml-0">
             <button onClick={() => setSearchOpen(!searchOpen)}
-              className={['md:hidden p-2.5 rounded-xl transition-colors', onDark ? 'text-white/65 hover:bg-white/10' : 'text-gray-500 hover:bg-gray-100'].join(' ')}>
+              className={['md:hidden p-2.5 rounded-xl transition-colors', onDark ? 'text-white/85 hover:bg-white/10' : 'text-gray-500 hover:bg-gray-100'].join(' ')}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
             </button>
 
             <a href="https://wa.me/254746722417?text=Hi%20Smartech%20Kenya%2C%20I%20want%20to%20order" target="_blank" rel="noopener noreferrer"
-              className={['hidden xl:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all', onDark ? 'text-white/65 hover:bg-white/10' : 'text-gray-500 hover:bg-gray-100'].join(' ')}>
+              className={['hidden xl:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all', onDark ? 'text-white/85 hover:bg-white/10' : 'text-gray-500 hover:bg-gray-100'].join(' ')}>
               Order via WhatsApp
             </a>
 
@@ -197,14 +197,14 @@ export function Header() {
               </Link>
             )}
 
-            <Link href="/wishlist" className={['relative p-2.5 rounded-xl transition-colors hidden sm:flex', onDark ? 'text-white/65 hover:bg-white/10' : 'text-gray-500 hover:bg-gray-100'].join(' ')}>
+            <Link href="/wishlist" className={['relative p-2.5 rounded-xl transition-colors hidden sm:flex', onDark ? 'text-white/85 hover:bg-white/10' : 'text-gray-500 hover:bg-gray-100'].join(' ')}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
               </svg>
               {wishlistCount > 0 && <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center text-white" style={{background:'#F97316'}}>{wishlistCount}</span>}
             </Link>
 
-            <Link href="/cart" className={['relative p-2.5 rounded-xl transition-colors', onDark ? 'text-white/65 hover:bg-white/10' : 'text-gray-500 hover:bg-gray-100'].join(' ')}>
+            <Link href="/cart" className={['relative p-2.5 rounded-xl transition-colors', onDark ? 'text-white/85 hover:bg-white/10' : 'text-gray-500 hover:bg-gray-100'].join(' ')}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
               </svg>
@@ -212,7 +212,7 @@ export function Header() {
             </Link>
 
             {session ? (
-              <button onClick={() => signOut()} className={['hidden sm:flex p-2.5 rounded-xl transition-colors', onDark ? 'text-white/65 hover:bg-white/10' : 'text-gray-500 hover:bg-gray-100'].join(' ')}>
+              <button onClick={() => signOut()} className={['hidden sm:flex p-2.5 rounded-xl transition-colors', onDark ? 'text-white/85 hover:bg-white/10' : 'text-gray-500 hover:bg-gray-100'].join(' ')}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
@@ -225,7 +225,7 @@ export function Header() {
             )}
 
             <button onClick={() => setMobileOpen(!mobileOpen)}
-              className={['lg:hidden p-2.5 rounded-xl transition-colors ml-0.5', onDark ? 'text-white/65 hover:bg-white/10' : 'text-gray-500 hover:bg-gray-100'].join(' ')}>
+              className={['lg:hidden p-2.5 rounded-xl transition-colors ml-0.5', onDark ? 'text-white/85 hover:bg-white/10' : 'text-gray-500 hover:bg-gray-100'].join(' ')}>
               {mobileOpen
                 ? <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12"/></svg>
                 : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -235,12 +235,12 @@ export function Header() {
         </div>
 
         {/* Category nav strip */}
-        <div className={['hidden lg:block border-t transition-colors', onDark ? 'border-white/[0.08]' : 'border-gray-100'].join(' ')}>
+        <div className={['hidden lg:block border-t transition-colors', onDark ? 'border-white/[0.12]' : 'border-gray-100'].join(' ')}>
           <div className="max-w-[1320px] mx-auto px-5 flex items-center overflow-x-auto hide-scrollbar">
             {NAV.map(n => (
               <Link key={n.href} href={n.href}
                 className={['flex-shrink-0 px-4 py-2.5 text-[11.5px] font-semibold tracking-wide whitespace-nowrap transition-all border-b-2',
-                  onDark ? 'border-transparent text-white/50 hover:text-white hover:border-white/40'
+                  onDark ? 'border-transparent text-white/80 hover:text-white hover:border-white/50'
                          : 'border-transparent text-gray-400 hover:text-gray-800 hover:border-gray-300'].join(' ')}>
                 {n.label}
               </Link>
@@ -248,7 +248,7 @@ export function Header() {
             <div className="flex-1"/>
             <Link href="/products?isFeatured=true"
               className={['flex-shrink-0 px-4 py-2.5 text-[11.5px] font-bold tracking-wide transition-all border-b-2 border-transparent',
-                onDark ? 'text-orange-400 hover:text-orange-300' : 'text-orange-500 hover:text-orange-600'].join(' ')}>
+                onDark ? 'text-orange-300 hover:text-orange-200 font-bold' : 'text-orange-500 hover:text-orange-600 font-bold'].join(' ')}>
               Deals
             </Link>
           </div>
