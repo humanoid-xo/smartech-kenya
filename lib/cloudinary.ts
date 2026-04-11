@@ -69,7 +69,9 @@ function buildContext(fields: Partial<CldProduct>): string {
 }
 
 function parseResource(r: any): CldProduct {
-  const c   = r.context?.custom ?? {};
+  // Cloudinary Search API returns context flat: { brand, name, ... }
+  // Cloudinary Admin API returns context nested: { custom: { brand, name, ... } }
+  const c   = r.context?.custom ?? r.context ?? {};
   const pid = r.public_id as string;
   // Derive sku from public_id as fallback; prefer the stored context value
   const derivedSku = pid.replace('smartech-products/', '').replace(/_/g, '-');
