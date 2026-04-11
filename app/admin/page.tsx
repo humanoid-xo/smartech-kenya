@@ -73,7 +73,7 @@ export default function AdminPage() {
   const [dbError,  setDbError]  = useState('');
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
-  const [tab,      setTab]      = useState<'images'|'folder'|'direct'|'add'>('add');
+  const [tab,      setTab]      = useState<'images'|'folder'|'direct'|'add'|'manage'>('add');
 
   /* Login: auth via DB-free endpoint, then try to load products */
   const login = async () => {
@@ -185,6 +185,7 @@ export default function AdminPage() {
             { id: 'images', icon: '🖼', label: 'Image Manager'  },
             { id: 'folder', icon: '📁', label: 'Folder Upload'  },
             { id: 'add',    icon: '＋', label: 'Add Product'    },
+            { id: 'manage', icon: '✎',  label: 'Manage'         },
           ] as const).map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
               className="px-5 py-4 text-sm font-semibold border-b-2 transition-all flex items-center gap-2"
@@ -204,6 +205,7 @@ export default function AdminPage() {
         {tab === 'images' && <ImageManager products={products} secret={secret} onUpdate={p => setProducts(p)} />}
         {tab === 'folder' && <FolderUpload products={products} secret={secret} onDone={p => setProducts(p)} />}
         {tab === 'add'    && <AddProduct   secret={secret} />}
+        {tab === 'manage' && <ManageProducts secret={secret} />}
       </div>
     </div>
   );
@@ -660,6 +662,7 @@ function AddProduct({ secret }: { secret: string }) {
   const [form, setForm] = useState({
     name: '', brand: 'Mika', sku: '', category: 'KITCHEN',
     price: '', comparePrice: '', stock: '10', subcategory: '', description: '',
+    isFeatured: false,
   });
   const [imageFile, setImageFile]  = useState<File | null>(null);
   const [imagePreview, setPreview] = useState('');
@@ -686,12 +689,13 @@ function AddProduct({ secret }: { secret: string }) {
           subcategory:  form.subcategory || undefined,
           description:  form.description || undefined,
           imageBase64:  imageBase64 || undefined,
+          isFeatured:   form.isFeatured,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed');
       setSuccess(`✓ "${data.product?.name ?? form.name}" added successfully`);
-      setForm({ name:'', brand:'Mika', sku:'', category:'KITCHEN', price:'', comparePrice:'', stock:'10', subcategory:'', description:'' });
+      setForm({ name:'', brand:'Mika', sku:'', category:'KITCHEN', price:'', comparePrice:'', stock:'10', subcategory:'', description:'', isFeatured: false });
       setImageFile(null); setPreview('');
     } catch (err: any) { setError(err.message); }
     setSaving(false);
@@ -761,6 +765,21 @@ function AddProduct({ secret }: { secret: string }) {
           <label className="block text-sm font-semibold mb-1.5" style={{ color: '#0C0C0C' }}>Description</label>
           <textarea value={form.description} onChange={e => set('description', e.target.value)} rows={3} placeholder="Optional…" className={`${inp} resize-none`} style={inpStyle}/>
         </div>
+        <div className="col-span-2">
+          <label className="flex items-center gap-3 cursor-pointer select-none">
+            <div
+              onClick={() => setForm(f => ({ ...f, isFeatured: !f.isFeatured }))}
+              className="relative w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0"
+              style={{ background: form.isFeatured ? '#8B5A1A' : '#D4C9B8' }}>
+              <div className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200"
+                style={{ transform: form.isFeatured ? 'translateX(20px)' : 'translateX(0)' }}/>
+            </div>
+            <div>
+              <p className="text-sm font-semibold" style={{ color: '#0C0C0C' }}>Featured Product</p>
+              <p className="text-xs" style={{ color: '#6B6B6B' }}>Show on homepage Featured Products section</p>
+            </div>
+          </label>
+        </div>
       </div>
       <button type="submit" disabled={saving || !form.name || !form.price}
         className="w-full py-3.5 rounded-xl font-bold text-sm disabled:opacity-40"
@@ -768,5 +787,162 @@ function AddProduct({ secret }: { secret: string }) {
         {saving ? 'Saving…' : 'Add Product'}
       </button>
     </form>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   MANAGE PRODUCTS — toggle isFeatured / isActive on existing uploads
+══════════════════════════════════════════════════════════ */
+interface ManagedProduct {
+  id: string; sku: string; name: string; brand: string; category: string;
+  price: number; images: string[]; isFeatured: boolean; isActive: boolean; slug: string;
+}
+
+function ManageProducts({ secret }: { secret: string }) {
+  const [products, setProducts] = useState<ManagedProduct[]>([]);
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState('');
+  const [saving,   setSaving]   = useState<string | null>(null);
+  const [flash,    setFlash]    = useState<Record<string, string>>({});
+  const [search,   setSearch]   = useState('');
+
+  const load = async () => {
+    setLoading(true); setError('');
+    try {
+      const res  = await fetch(`/api/admin/manage?secret=${encodeURIComponent(secret)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load');
+      setProducts(data.products || []);
+    } catch (e: any) { setError(e.message); }
+    setLoading(false);
+  };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useState(() => { load(); });
+
+  const patch = async (sku: string, fields: Partial<ManagedProduct>) => {
+    setSaving(sku);
+    try {
+      const res = await fetch('/api/admin/manage', {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ secret, sku, ...fields }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      setProducts(ps => ps.map(p => p.sku === sku ? { ...p, ...fields } : p));
+      setFlash(f => ({ ...f, [sku]: '✓ Saved' }));
+      setTimeout(() => setFlash(f => { const n = { ...f }; delete n[sku]; return n; }), 2000);
+    } catch (e: any) {
+      setFlash(f => ({ ...f, [sku]: '✗ ' + e.message }));
+      setTimeout(() => setFlash(f => { const n = { ...f }; delete n[sku]; return n; }), 3000);
+    }
+    setSaving(null);
+  };
+
+  const filtered = products.filter(p => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q);
+  });
+
+  const inp = 'w-full px-3 py-2 rounded-lg text-sm focus:outline-none';
+  const inpStyle = { background: 'white', border: '1px solid #EDE7D9', color: '#0C0C0C' };
+
+  if (loading) return (
+    <div className="text-center py-20 text-sm" style={{ color: '#6B6B6B' }}>
+      Loading products from Cloudinary…
+    </div>
+  );
+  if (error) return (
+    <div className="text-center py-20">
+      <p className="text-red-500 text-sm mb-4">{error}</p>
+      <button onClick={load} className="px-4 py-2 rounded-lg text-sm font-semibold"
+        style={{ background: '#0C0C0C', color: '#F5F0E8' }}>Retry</button>
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <h2 className="text-lg font-bold" style={{ color: '#0C0C0C' }}>Manage Products</h2>
+          <p className="text-xs mt-0.5" style={{ color: '#6B6B6B' }}>{products.length} products · toggle Featured or Active without re-uploading</p>
+        </div>
+        <div className="flex gap-2">
+          <input value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="Search by name, SKU, brand…"
+            className={inp} style={{ ...inpStyle, width: '220px' }}/>
+          <button onClick={load} className="px-4 py-2 rounded-lg text-xs font-semibold border"
+            style={{ borderColor: '#D4C9B8', color: '#6B6B6B', background: 'white' }}>
+            ↻ Refresh
+          </button>
+        </div>
+      </div>
+
+      {filtered.length === 0 && (
+        <div className="text-center py-16 text-sm" style={{ color: '#6B6B6B' }}>
+          {search ? 'No products match your search.' : 'No products found in Cloudinary.'}
+        </div>
+      )}
+
+      <div className="grid gap-3">
+        {filtered.map(p => (
+          <div key={p.sku} className="flex items-center gap-4 p-4 rounded-2xl border"
+            style={{ background: 'white', borderColor: '#EDE7D9', opacity: p.isActive ? 1 : 0.55 }}>
+
+            <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100">
+              {p.images[0]
+                ? <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover"/>
+                : <div className="w-full h-full flex items-center justify-center text-xl">🖼</div>}
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm truncate" style={{ color: '#0C0C0C' }}>{p.name}</p>
+              <p className="text-xs mt-0.5" style={{ color: '#6B6B6B' }}>
+                {p.brand} · {p.category} · SKU: {p.sku}
+              </p>
+              <p className="text-xs font-bold mt-0.5" style={{ color: '#8B5A1A' }}>
+                KES {p.price.toLocaleString()}
+              </p>
+            </div>
+
+            {flash[p.sku] && (
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                style={{
+                  background: flash[p.sku].startsWith('✓') ? 'rgba(22,101,52,0.10)' : 'rgba(220,38,38,0.08)',
+                  color:      flash[p.sku].startsWith('✓') ? '#166534' : '#dc2626',
+                }}>
+                {flash[p.sku]}
+              </span>
+            )}
+
+            <div className="flex items-center gap-4 flex-shrink-0">
+              <label className="flex flex-col items-center gap-1 cursor-pointer">
+                <span className="text-[10px] font-semibold" style={{ color: '#6B6B6B' }}>Featured</span>
+                <div
+                  onClick={() => saving !== p.sku && patch(p.sku, { isFeatured: !p.isFeatured })}
+                  className="relative w-10 h-5 rounded-full transition-colors duration-200"
+                  style={{ background: p.isFeatured ? '#8B5A1A' : '#D4C9B8', cursor: saving === p.sku ? 'wait' : 'pointer' }}>
+                  <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200"
+                    style={{ transform: p.isFeatured ? 'translateX(20px)' : 'translateX(0)' }}/>
+                </div>
+              </label>
+
+              <label className="flex flex-col items-center gap-1 cursor-pointer">
+                <span className="text-[10px] font-semibold" style={{ color: '#6B6B6B' }}>Active</span>
+                <div
+                  onClick={() => saving !== p.sku && patch(p.sku, { isActive: !p.isActive })}
+                  className="relative w-10 h-5 rounded-full transition-colors duration-200"
+                  style={{ background: p.isActive ? '#166534' : '#D4C9B8', cursor: saving === p.sku ? 'wait' : 'pointer' }}>
+                  <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200"
+                    style={{ transform: p.isActive ? 'translateX(20px)' : 'translateX(0)' }}/>
+                </div>
+              </label>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

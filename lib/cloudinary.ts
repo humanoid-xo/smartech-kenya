@@ -52,6 +52,7 @@ function buildContext(fields: Partial<CldProduct>): string {
   const add = (k: string, v: string | number | boolean | undefined | null) => {
     if (v != null && v !== '') pairs.push(`${k}=${escVal(v)}`);
   };
+  add('sku',          fields.sku);   // FIX: store sku so it survives a read-back
   add('name',         fields.name);
   add('brand',        fields.brand);
   add('category',     fields.category);
@@ -70,7 +71,9 @@ function buildContext(fields: Partial<CldProduct>): string {
 function parseResource(r: any): CldProduct {
   const c   = r.context?.custom ?? {};
   const pid = r.public_id as string;
-  const sku = pid.replace('smartech-products/', '').replace(/_/g, '-');
+  // Derive sku from public_id as fallback; prefer the stored context value
+  const derivedSku = pid.replace('smartech-products/', '').replace(/_/g, '-');
+  const sku = (c.sku ?? derivedSku) as string;
   return {
     id:           pid,
     sku:          c.sku       ?? sku,
@@ -114,7 +117,7 @@ export async function listProducts(opts?: {
         method:  'POST',
         headers: { Authorization: b64auth(), 'Content-Type': 'application/json' },
         body:    JSON.stringify({
-          expression:  'folder:smartech-products',
+          expression:  'public_id:smartech-products/*',
           with_field:  ['context'],
           max_results: 500,
           sort_by:     [{ created_at: 'desc' }],
@@ -254,7 +257,7 @@ export async function listAllProducts(): Promise<CldProduct[]> {
         method:  'POST',
         headers: { Authorization: b64auth(), 'Content-Type': 'application/json' },
         body:    JSON.stringify({
-          expression:  'folder:smartech-products',
+          expression:  'public_id:smartech-products/*',
           with_field:  ['context'],
           max_results: 500,
           sort_by:     [{ created_at: 'desc' }],
