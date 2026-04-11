@@ -282,3 +282,19 @@ export async function listAllProducts(): Promise<CldProduct[]> {
       .filter((p: CldProduct) => p.name && p.name !== p.sku);
   } catch { return []; }
 }
+
+/** Delete a product image + all its metadata from Cloudinary. */
+export async function deleteProduct(sku: string): Promise<void> {
+  const pid = skuToPublicId(sku);
+  const ts  = Math.floor(Date.now() / 1000);
+  const sig = await sha1(`invalidate=true&public_id=${pid}&timestamp=${ts}${SEC}`);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/destroy`, {
+    method: 'POST',
+    body:   new URLSearchParams({ public_id: pid, invalidate: 'true', api_key: KEY, timestamp: String(ts), signature: sig }),
+  });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => String(res.status));
+    throw new Error(`Delete failed: ${txt}`);
+  }
+}
+

@@ -1,9 +1,11 @@
 'use client';
 
-import { useState }  from 'react';
-import Link           from 'next/link';
-import Image          from 'next/image';
-import toast          from 'react-hot-toast';
+import { useState }    from 'react';
+import Link             from 'next/link';
+import Image            from 'next/image';
+import { useDispatch }  from 'react-redux';
+import { addToCart }    from '@/store/slices/cartSlice';
+import toast            from 'react-hot-toast';
 
 interface Product {
   id:            string;
@@ -22,6 +24,7 @@ interface Product {
 }
 
 export function ProductCard({ product: p }: { product: Product }) {
+  const dispatch  = useDispatch();
   const [imgErr, setImgErr] = useState(false);
 
   const mainImage: string = p.imageUrl ?? p.images?.[0] ?? '';
@@ -33,13 +36,20 @@ export function ProductCard({ product: p }: { product: Product }) {
   const addCart = (e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation();
     if (p.stock === 0) return;
-    toast.success('Added to cart', {
+    dispatch(addToCart({
+      productId: p.id,
+      name:      p.name,
+      price:     p.price,
+      image:     mainImage,
+      quantity:  1,
+      stock:     p.stock,
+    }));
+    toast.success(`Added to cart`, {
+      icon: '🛒',
       style: { background: '#0C0C0C', color: '#F5F0E8', borderRadius: '14px', fontSize: '13px' },
     });
   };
 
-  // BUG FIX: p.id is "smartech-products/MIKA_WM_8KG" which contains "/" and
-  // broke the URL completely. Use p.sku which is clean and URL-safe.
   const productUrl = `/products/${encodeURIComponent(p.sku)}`;
 
   return (
