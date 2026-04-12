@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link           from 'next/link';
 import Image          from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import { RootState }  from '@/store';
 
@@ -72,13 +72,11 @@ function CustomerCareButton() {
 
 export function Header() {
   const pathname  = usePathname();
-  const router    = useRouter();
   const cartItems = useSelector((s: RootState) => s.cart?.items ?? []);
   const cartCount = cartItems.reduce((n: number, i: any) => n + (i.quantity ?? 1), 0);
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [searchVal,  setSearchVal]  = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
@@ -90,14 +88,6 @@ export function Header() {
     window.addEventListener('keydown', fn);
     return () => window.removeEventListener('keydown', fn);
   }, []);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const q = searchVal.trim();
-    if (!q) return;
-    setSearchOpen(false); setSearchVal('');
-    router.push(`/products?search=${encodeURIComponent(q)}`);
-  };
 
   return (
     <>
@@ -141,14 +131,13 @@ export function Header() {
 
           {/* Desktop search */}
           <div className="hidden md:flex flex-1 max-w-lg mx-auto">
-            <form onSubmit={handleSearch} className="relative w-full">
+            <form action="/products" method="GET" className="relative w-full">
               <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
-              <input type="text" value={searchVal} onChange={e => setSearchVal(e.target.value)}
-                placeholder="Search products, brands…"
+              <input type="text" name="search" placeholder="Search products, brands…"
                 className="w-full pl-10 pr-4 py-2.5 rounded-full text-sm bg-gray-100 border border-gray-200
                            text-gray-800 placeholder-gray-400 focus:bg-white focus:border-orange-300
                            focus:shadow-sm outline-none transition-all duration-200"/>
@@ -237,21 +226,14 @@ export function Header() {
           onClick={() => setSearchOpen(false)}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-md"/>
           <div className="relative w-full max-w-md" onClick={e => e.stopPropagation()}>
-            <form onSubmit={handleSearch} className="flex items-center gap-3 bg-white rounded-2xl shadow-2xl px-5 py-4">
+            <form action="/products" method="GET" className="flex items-center gap-3 bg-white rounded-2xl shadow-2xl px-5 py-4">
               <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
-              <input ref={searchRef} type="text" value={searchVal} onChange={e => setSearchVal(e.target.value)}
+              <input ref={searchRef} type="text" name="search"
                 placeholder="Search products, brands…"
                 className="flex-1 text-gray-800 text-base outline-none placeholder-gray-400 bg-transparent"/>
-              {searchVal && (
-                <button type="button" onClick={() => setSearchVal('')} className="text-gray-400 hover:text-gray-600">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
-                  </svg>
-                </button>
-              )}
             </form>
           </div>
         </div>
@@ -265,13 +247,13 @@ export function Header() {
                           overflow-y-auto max-h-[calc(100vh-92px)]"
             onClick={e => e.stopPropagation()}>
             <div className="px-5 py-3 border-b border-gray-100">
-              <form onSubmit={handleSearch} className="relative">
+              <form action="/products" method="GET" className="relative">
                 <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
                   fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
-                <input type="text" value={searchVal} onChange={e => setSearchVal(e.target.value)}
+                <input type="text" name="search"
                   placeholder="Search products…"
                   className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-gray-100 text-sm text-gray-800 placeholder-gray-400 outline-none"/>
               </form>

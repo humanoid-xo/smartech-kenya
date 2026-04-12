@@ -2,6 +2,7 @@ import { notFound }         from 'next/navigation';
 import Image                 from 'next/image';
 import Link                  from 'next/link';
 import { getProductBySku, listProducts } from '@/lib/cloudinary';
+import { AddToCartButton } from '@/components/features/products/AddToCartButton';
 import type { Metadata }     from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -157,11 +158,13 @@ export default async function ProductDetailPage({ params }: Props) {
                 </svg>
                 Order on WhatsApp
               </a>
-              <button
-                className="flex-1 px-7 py-4 rounded-full text-sm font-semibold border border-cream-warm bg-white hover:bg-cream-warm/40 transition-colors text-ink disabled:opacity-40"
-                disabled={product.stock === 0}>
-                {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
-              </button>
+              <AddToCartButton
+                productId={product.id}
+                name={product.name}
+                price={product.price}
+                image={product.images[0] ?? ''}
+                stock={product.stock}
+              />
             </div>
 
             {/* Trust */}

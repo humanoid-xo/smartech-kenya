@@ -3,6 +3,9 @@
 import { useState }    from 'react';
 import Link             from 'next/link';
 import Image            from 'next/image';
+import { useDispatch }  from 'react-redux';
+import { addToCart }    from '@/store/slices/cartSlice';
+import toast            from 'react-hot-toast';
 
 interface Product {
   id:            string;
@@ -21,6 +24,7 @@ interface Product {
 }
 
 export function ProductCard({ product: p }: { product: Product }) {
+  const dispatch = useDispatch();
   const [imgErr, setImgErr] = useState(false);
 
   const mainImage: string = p.imageUrl ?? p.images?.[0] ?? '';
@@ -29,13 +33,22 @@ export function ProductCard({ product: p }: { product: Product }) {
     ? Math.round((1 - p.price / p.comparePrice) * 100)
     : null;
 
+  /** + button → add to Redux cart, show toast */
   const addCart = (e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation();
     if (p.stock === 0) return;
-    const msg = encodeURIComponent(
-      `Hi Smartech Kenya! I'd like to order:\n\n${p.name}\nPrice: KES ${p.price.toLocaleString()}\n\nPlease confirm availability. Thank you!`
-    );
-    window.open(`https://wa.me/254746722417?text=${msg}`, '_blank', 'noopener,noreferrer');
+    dispatch(addToCart({
+      productId: p.id,
+      name:      p.name,
+      price:     p.price,
+      image:     mainImage,
+      quantity:  1,
+      stock:     p.stock,
+    }));
+    toast.success(`Added to cart`, {
+      icon: '🛒',
+      style: { background: '#0C0C0C', color: '#F5F0E8', borderRadius: '14px', fontSize: '13px' },
+    });
   };
 
   const productUrl = `/products/${encodeURIComponent(p.sku)}`;
@@ -77,6 +90,7 @@ export function ProductCard({ product: p }: { product: Product }) {
             </div>
           )}
 
+          {/* Add to cart button — appears on hover */}
           {p.stock > 0 && (
             <button onClick={addCart} aria-label="Add to cart"
               className="absolute bottom-3 right-3 w-9 h-9 rounded-xl flex items-center justify-center shadow-md z-10
