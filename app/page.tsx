@@ -2,7 +2,7 @@ import Image  from 'next/image';
 import Link   from 'next/link';
 import { listProducts } from '@/lib/cloudinary';
 import { ProductCard }  from '@/components/features/products/ProductCard';
-import { HERO_IMAGES }  from '@/constants/heroImages';
+import { listHeroImages } from '@/lib/cloudinary';
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -20,11 +20,20 @@ const SOCIAL = [
 ];
 
 export default async function HomePage() {
-  const [featured, latest, kitchen] = await Promise.all([
+  const [featured, latest, kitchen, heroImages] = await Promise.all([
     listProducts({ featured: true, limit: 8 }),
     listProducts({ limit: 4 }),
     listProducts({ category: 'KITCHEN', limit: 4 }),
+    listHeroImages(),
   ]);
+
+  // Fallback hero images if none uploaded to Cloudinary yet
+  const HERO_IMAGES = heroImages.length > 0 ? heroImages : [
+    { src: 'https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=700&q=80', alt: 'Kitchen Appliances' },
+    { src: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=700&q=80', alt: 'Smart Home' },
+    { src: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=700&q=80', alt: 'Laptops & Tech' },
+    { src: 'https://images.unsplash.com/photo-1593359677879-a4bb92f4834c?w=700&q=80', alt: 'Televisions' },
+  ];
 
   return (
     <div className="bg-cream">

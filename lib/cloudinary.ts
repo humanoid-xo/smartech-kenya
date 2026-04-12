@@ -298,3 +298,79 @@ export async function deleteProduct(sku: string): Promise<void> {
   }
 }
 
+
+/* ── Hero Images ─────────────────────────────────────────────────────────── */
+export interface HeroImage {
+  src:   string;
+  alt:   string;
+  title: string;
+}
+
+/** List images in the smartech-hero/ folder */
+export async function listHeroImages(): Promise<HeroImage[]> {
+  try {
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUD}/resources/search`,
+      {
+        method:  'POST',
+        headers: { Authorization: b64auth(), 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          expression:  'public_id:smartech-hero/*',
+          with_field:  ['context'],
+          max_results: 20,
+          sort_by:     [{ created_at: 'asc' }],
+        }),
+        cache: 'no-store',
+      }
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.resources ?? []).map((r: any) => {
+      const c = r.context?.custom ?? r.context ?? {};
+      return {
+        src:   r.secure_url as string,
+        alt:   (c.alt ?? c.caption ?? 'Smartech Kenya') as string,
+        title: (c.title ?? '') as string,
+      };
+    });
+  } catch { return []; }
+}
+
+/** Upload a hero image to the smartech-hero/ folder */
+export async function uploadHeroImage(
+  imageBase64: string,
+  slot: number,          // 1-4 (slot number keeps order stable)
+  alt: string,
+  title?: string,
+): Promise<string> {
+  const pid = `smartech-hero/hero-${slot}`;
+  const ctx = `alt=${escVal(alt)}|title=${escVal(title ?? '')}`;
+  const ts  = Math.floor(Date.now() / 1000);
+  const sig = await sha1(`context=${ctx}&overwrite=true&public_id=${pid}&timestamp=${ts}${SEC}`);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`, {
+    method: 'POST',
+    body:   new URLSearchParams({
+      file:      imageBase64,
+      public_id: pid,
+      overwrite: 'true',
+      context:   ctx,
+      api_key:   KEY,
+      timestamp: String(ts),
+      signature: sig,
+    }),
+  });
+  if (!res.ok) throw new Error(`Hero upload failed: ${await res.text()}`);
+  return (await res.json()).secure_url as string;
+}
+
+/** Delete a hero image slot */
+export async function deleteHeroImage(slot: number): Promise<void> {
+  const pid = `smartech-hero/hero-${slot}`;
+  const ts  = Math.floor(Date.now() / 1000);
+  const sig = await sha1(`invalidate=true&public_id=${pid}&timestamp=${ts}${SEC}`);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/destroy`, {
+    method: 'POST',
+    body:   new URLSearchParams({ public_id: pid, invalidate: 'true', api_key: KEY, timestamp: String(ts), signature: sig }),
+  });
+  if (!res.ok) throw new Error(`Hero delete failed: ${await res.text()}`);
+}

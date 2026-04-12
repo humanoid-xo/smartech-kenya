@@ -213,12 +213,11 @@ export function Header() {
           <div className="max-w-[1320px] mx-auto px-5 flex items-center overflow-x-auto hide-scrollbar">
             {NAV.map(n => (
               <Link key={n.href} href={n.href}
-                className={[
-                  'flex-shrink-0 px-4 py-2.5 text-[11.5px] font-semibold tracking-wide whitespace-nowrap transition-all border-b-2',
-                  pathname.startsWith(n.href.split('?')[0]) && n.href !== '/products'
-                    ? 'border-orange-500 text-orange-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300',
-                ].join(' ')}>
+                className="flex-shrink-0 px-4 py-2.5 text-[11.5px] font-semibold tracking-wide whitespace-nowrap
+                           transition-all text-gray-500 hover:text-gray-900 relative
+                           after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px]
+                           after:bg-transparent after:transition-colors
+                           hover:after:bg-gray-400">
                 {n.label}
               </Link>
             ))}

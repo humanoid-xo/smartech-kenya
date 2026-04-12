@@ -73,7 +73,7 @@ export default function AdminPage() {
   const [dbError,  setDbError]  = useState('');
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
-  const [tab,      setTab]      = useState<'images'|'folder'|'direct'|'add'|'manage'>('add');
+  const [tab,      setTab]      = useState<'images'|'folder'|'direct'|'add'|'manage'|'hero'>('add');
 
   /* Login: auth via DB-free endpoint, then try to load products */
   const login = async () => {
@@ -186,6 +186,7 @@ export default function AdminPage() {
             { id: 'folder', icon: '📁', label: 'Folder Upload'  },
             { id: 'add',    icon: '＋', label: 'Add Product'    },
             { id: 'manage', icon: '✎',  label: 'Manage'         },
+            { id: 'hero',   icon: '🖼',  label: 'Hero Images'    },
           ] as const).map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
               className="px-5 py-4 text-sm font-semibold border-b-2 transition-all flex items-center gap-2"
@@ -206,6 +207,7 @@ export default function AdminPage() {
         {tab === 'folder' && <FolderUpload products={products} secret={secret} onDone={p => setProducts(p)} />}
         {tab === 'add'    && <AddProduct   secret={secret} />}
         {tab === 'manage' && <ManageProducts secret={secret} />}
+        {tab === 'hero'   && <HeroImages   secret={secret} />}
       </div>
     </div>
   );
@@ -1397,5 +1399,174 @@ function ManageProducts({ secret }: { secret: string }) {
         )}
       </div>
     </>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   HERO IMAGES — Upload images that appear in the homepage hero
+══════════════════════════════════════════════════════════ */
+function HeroImages({ secret }: { secret: string }) {
+  const SLOTS = [1, 2, 3, 4];
+
+  const [slots, setSlots] = useState<Record<number, { src: string; alt: string; loading: boolean; error: string }>>({
+    1: { src: '', alt: '', loading: false, error: '' },
+    2: { src: '', alt: '', loading: false, error: '' },
+    3: { src: '', alt: '', loading: false, error: '' },
+    4: { src: '', alt: '', loading: false, error: '' },
+  });
+  const [loadingAll, setLoadingAll] = useState(true);
+  const [success, setSuccess] = useState('');
+
+  // Load current hero images on mount
+  useState(() => {
+    fetch(`/api/admin/hero?secret=${encodeURIComponent(secret)}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.images) {
+          const updated = { ...slots };
+          data.images.forEach((img: any, i: number) => {
+            const slot = i + 1;
+            if (updated[slot]) updated[slot] = { ...updated[slot], src: img.src, alt: img.alt ?? '' };
+          });
+          setSlots(updated);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoadingAll(false));
+  });
+
+  const upload = async (slot: number, file: File) => {
+    const alt = slots[slot].alt || `Hero image ${slot}`;
+    setSlots(s => ({ ...s, [slot]: { ...s[slot], loading: true, error: '' } }));
+    try {
+      const base64 = await new Promise<string>((res, rej) => {
+        const r = new FileReader();
+        r.onload = e => res(e.target!.result as string);
+        r.onerror = () => rej(new Error('read failed'));
+        r.readAsDataURL(file);
+      });
+      const resp = await fetch('/api/admin/hero', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret, slot, imageBase64: base64, alt }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Failed');
+      setSlots(s => ({ ...s, [slot]: { ...s[slot], src: data.url, loading: false } }));
+      setSuccess(`✓ Slot ${slot} updated`);
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (e: any) {
+      setSlots(s => ({ ...s, [slot]: { ...s[slot], loading: false, error: e.message } }));
+    }
+  };
+
+  const removeImage = async (slot: number) => {
+    if (!confirm(`Delete hero image ${slot}?`)) return;
+    setSlots(s => ({ ...s, [slot]: { ...s[slot], loading: true, error: '' } }));
+    try {
+      const resp = await fetch('/api/admin/hero', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret, slot }),
+      });
+      if (!resp.ok) throw new Error((await resp.json()).error || 'Failed');
+      setSlots(s => ({ ...s, [slot]: { src: '', alt: '', loading: false, error: '' } }));
+    } catch (e: any) {
+      setSlots(s => ({ ...s, [slot]: { ...s[slot], loading: false, error: e.message } }));
+    }
+  };
+
+  if (loadingAll) return (
+    <div className="flex items-center justify-center py-24">
+      <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#8B5A1A', borderTopColor: 'transparent' }}/>
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-lg font-bold" style={{ color: '#0C0C0C' }}>Hero Images</h2>
+        <p className="text-xs mt-1" style={{ color: '#9B8B7A' }}>
+          Upload up to 4 images for the homepage hero section. Images appear in slot order (1 → 4).
+        </p>
+      </div>
+
+      {success && (
+        <div className="px-4 py-3 rounded-xl text-sm font-medium"
+          style={{ background: 'rgba(22,101,52,0.08)', border: '1px solid rgba(22,101,52,0.20)', color: '#166534' }}>
+          {success}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-4">
+        {SLOTS.map(slot => {
+          const s = slots[slot];
+          return (
+            <div key={slot} className="rounded-2xl border overflow-hidden" style={{ borderColor: '#EDE7D9' }}>
+              {/* Preview area */}
+              <div className="relative aspect-[4/3] bg-gray-100">
+                {s.src ? (
+                  <img src={s.src} alt={s.alt} className="w-full h-full object-cover"/>
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ color: '#B8A99A' }}>
+                    <div className="text-4xl mb-2">🖼</div>
+                    <p className="text-xs font-medium">Slot {slot} — empty</p>
+                    <p className="text-[10px] mt-0.5">Will use Unsplash fallback</p>
+                  </div>
+                )}
+                {/* Slot badge */}
+                <div className="absolute top-2 left-2 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                  style={{ background: 'rgba(0,0,0,0.55)' }}>
+                  {slot}
+                </div>
+                {/* Delete btn */}
+                {s.src && !s.loading && (
+                  <button onClick={() => removeImage(slot)}
+                    className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center text-white transition-opacity hover:opacity-75"
+                    style={{ background: 'rgba(220,38,38,0.8)' }}>
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                  </button>
+                )}
+                {s.loading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/70">
+                    <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#8B5A1A', borderTopColor: 'transparent' }}/>
+                  </div>
+                )}
+              </div>
+
+              {/* Controls */}
+              <div className="p-3 space-y-2" style={{ background: 'white' }}>
+                <input
+                  value={s.alt}
+                  onChange={e => setSlots(ss => ({ ...ss, [slot]: { ...ss[slot], alt: e.target.value } }))}
+                  placeholder={`Alt text for slot ${slot}…`}
+                  className="w-full px-3 py-2 rounded-lg text-xs focus:outline-none"
+                  style={{ background: '#FDFBF8', border: '1px solid #EDE7D9', color: '#0C0C0C' }}
+                />
+                <label className="flex items-center gap-2 cursor-pointer w-full px-3 py-2 rounded-lg text-xs font-semibold justify-center transition-colors"
+                  style={{ background: '#0C0C0C', color: '#F5F0E8' }}>
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                  </svg>
+                  {s.src ? 'Replace image' : 'Upload image'}
+                  <input type="file" accept="image/*" className="hidden"
+                    onChange={e => { const f = e.target.files?.[0]; if (f) upload(slot, f); }}/>
+                </label>
+                {s.error && <p className="text-[10px] text-red-500">{s.error}</p>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="p-4 rounded-xl text-xs leading-relaxed" style={{ background: 'rgba(139,90,26,0.06)', border: '1px solid rgba(139,90,26,0.15)', color: '#6B5A3A' }}>
+        <p className="font-semibold mb-1">Tips for great hero images:</p>
+        <p>• Use landscape images (wider than tall) — 4:3 or 16:9 ratio works best</p>
+        <p>• Recommended size: 1200×800px or larger for sharp display</p>
+        <p>• If all slots are empty, the homepage uses Unsplash placeholder images</p>
+      </div>
+    </div>
   );
 }
