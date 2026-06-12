@@ -1,0 +1,53 @@
+# ═══════════════════════════════════════════════════════════════
+#  SMARTECH KENYA — Environment Variables
+#  Copy this file to .env and fill in your values.
+#  NEVER commit the filled .env to git.
+# ═══════════════════════════════════════════════════════════════
+
+# ── DATABASE (MongoDB Atlas) ────────────────────────────────────
+# 1. Go to https://cloud.mongodb.com → create free cluster
+# 2. Click Connect → Drivers → copy the connection string
+# 3. Replace <username>, <password>, <cluster> with your values
+# 4. Add ?retryWrites=true&w=majority at the end
+DATABASE_URL="mongodb+srv://<username>:<password>@<cluster>.mongodb.net/smartech?retryWrites=true&w=majority&connectTimeoutMS=5000&socketTimeoutMS=5000"
+
+# ── NEXTAUTH ────────────────────────────────────────────────────
+# Generate a secret with: openssl rand -base64 32
+# Or just use any long random string
+NEXTAUTH_SECRET="REPLACE_WITH_A_LONG_RANDOM_STRING_AT_LEAST_32_CHARS"
+NEXTAUTH_URL="http://localhost:3000"
+# On Vercel, set NEXTAUTH_URL to your production URL e.g:
+# NEXTAUTH_URL="https://smartech-kenya.vercel.app"
+
+# ── ADMIN PANEL ─────────────────────────────────────────────────
+# Password to log into /admin — pick anything secure
+ADMIN_SECRET="smartech-admin-2025"
+
+# ── CLOUDINARY (image uploads) ──────────────────────────────────
+# 1. Go to https://cloudinary.com → free account
+# 2. Dashboard → copy Cloud Name, API Key, API Secret
+CLOUDINARY_CLOUD_NAME="your-cloud-name"
+CLOUDINARY_API_KEY="your-api-key"
+CLOUDINARY_API_SECRET="your-api-secret"
+
+# ── M-PESA (Safaricom Daraja) ───────────────────────────────────
+# 1. Go to https://developer.safaricom.co.ke → create app
+# 2. Use sandbox for testing, production for live payments
+MPESA_ENV="sandbox"
+MPESA_CONSUMER_KEY="your-daraja-consumer-key"
+MPESA_CONSUMER_SECRET="your-daraja-consumer-secret"
+MPESA_PASSKEY="your-lipa-na-mpesa-passkey"
+MPESA_SHORTCODE="174379"
+# Callback URL must be publicly accessible (use ngrok for local dev)
+MPESA_CALLBACK_URL="https://your-domain.com/api/mpesa/callback"
+
+# ── EMAIL (optional — for order confirmations) ──────────────────
+# Use a Gmail app password: https://myaccount.google.com/apppasswords
+EMAIL_USER="your-gmail@gmail.com"
+EMAIL_PASS="your-gmail-app-password"
+EMAIL_FROM="Smartech Kenya <your-gmail@gmail.com>"
+
+# ── TWILIO SMS (optional) ───────────────────────────────────────
+TWILIO_ACCOUNT_SID="your-twilio-sid"
+TWILIO_AUTH_TOKEN="your-twilio-token"
+TWILIO_PHONE_NUMBER="+1234567890"
